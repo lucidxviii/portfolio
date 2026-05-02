@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~/tools — Lab Values Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#1a1b26;--bg2:#16161e;--bg3:#1f2335;--panel:#24283b;--border:#2a2e42;
+    --text:#c0caf5;--subtle:#565f89;--pink:#f7768e;--orange:#ff9e64;--yellow:#e0af68;
+    --green:#9ece6a;--teal:#73daca;--cyan:#7dcfff;--blue:#7aa2f7;--purple:#bb9af7;--white:#a9b1d6;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9999;}
+
+  .wrap{max-width:1000px;margin:30px auto;padding:0 16px 60px;}
+
+  .kitty-window{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6);animation:fadeSlide 0.5s ease both;}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+  .titlebar{background:var(--bg3);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;}
+  .dots{display:flex;gap:7px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dr{background:var(--pink);box-shadow:0 0 6px var(--pink);}
+  .dy{background:var(--yellow);box-shadow:0 0 6px var(--yellow);}
+  .dg{background:var(--green);box-shadow:0 0 6px var(--green);}
+  .tab-label{font-size:12px;color:var(--blue);background:var(--bg2);border:1px solid var(--border);border-bottom:none;padding:2px 14px;border-radius:4px 4px 0 0;margin-left:10px;}
+
+  .back-btn{margin-left:auto;font-size:11px;color:var(--subtle);text-decoration:none;border:1px solid var(--border);border-radius:4px;padding:3px 10px;transition:all 0.15s;}
+  .back-btn:hover{color:var(--text);border-color:var(--blue);}
+
+  .body{padding:20px 24px;}
+
+  .prompt{display:flex;align-items:baseline;flex-wrap:wrap;margin-bottom:4px;font-size:13px;}
+  .pu{color:var(--green);font-weight:600;}.pat{color:var(--subtle);}.ph{color:var(--blue);font-weight:600;}
+  .pp{color:var(--yellow);}.pa{color:var(--pink);margin:0 6px;font-weight:700;}.pc{color:var(--text);margin-left:6px;}
+  .pf{color:var(--orange);margin-left:6px;}.parg{color:var(--cyan);margin-left:6px;}
+
+  .search-bar{display:flex;gap:10px;margin:14px 0;}
+  .search-input{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:9px 14px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;transition:border-color 0.15s;}
+  .search-input:focus{border-color:var(--blue);}
+  .search-input::placeholder{color:var(--subtle);}
+
+  .filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .filter-btn{padding:4px 12px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--subtle);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:all 0.15s;}
+  .filter-btn:hover,.filter-btn.active{background:var(--panel);color:var(--text);border-color:var(--blue);}
+
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  thead th{background:var(--bg3);color:var(--subtle);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
+  tbody tr{border-bottom:1px solid rgba(42,46,66,0.5);transition:background 0.15s;}
+  tbody tr:hover{background:var(--panel);}
+  td{padding:9px 12px;vertical-align:middle;}
+  .td-name{color:var(--blue);font-weight:600;}
+  .td-abbr{color:var(--purple);font-size:11px;}
+  .td-range{color:var(--teal);}
+  .td-unit{color:var(--subtle);}
+  .td-cat span{font-size:10px;padding:2px 7px;border-radius:3px;border:1px solid;font-weight:600;}
+  .cat-heme{color:var(--pink);border-color:var(--pink);background:rgba(247,118,142,0.08);}
+  .cat-chem{color:var(--yellow);border-color:var(--yellow);background:rgba(224,175,104,0.08);}
+  .cat-lft{color:var(--orange);border-color:var(--orange);background:rgba(255,158,100,0.08);}
+  .cat-renal{color:var(--cyan);border-color:var(--cyan);background:rgba(125,207,255,0.08);}
+  .cat-coag{color:var(--purple);border-color:var(--purple);background:rgba(187,154,247,0.08);}
+  .cat-abg{color:var(--green);border-color:var(--green);background:rgba(158,206,106,0.08);}
+  .td-critical{color:var(--pink);font-size:11px;}
+  .flag{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;}
+  .flag-crit{background:var(--pink);box-shadow:0 0 4px var(--pink);}
+  .flag-ok{background:var(--green);}
+
+  .no-results{text-align:center;padding:40px;color:var(--subtle);}
+
+  .count-bar{font-size:11px;color:var(--subtle);margin-bottom:10px;}
+  .count-bar span{color:var(--teal);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kitty-window">
+  <div class="titlebar">
+    <div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div>
+    <div class="tab-label">🧪 lab-values.sh</div>
+    <a class="back-btn" href="index.html">← back to portfolio</a>
+  </div>
+  <div class="body">
+    <div class="prompt">
+      <span class="pu">nurse</span><span class="pat">@</span><span class="ph">arch</span>
+      <span style="color:var(--subtle)">:</span><span class="pp">~/tools</span>
+      <span class="pa">❯</span><span class="pc">grep</span><span class="pf">-i</span><span class="parg">""</span><span class="pc">lab-values.db</span>
+    </div>
+
+    <div class="search-bar">
+      <input class="search-input" id="search" placeholder="search lab values... (e.g. sodium, WBC, glucose)" oninput="filterTable()" />
+    </div>
+
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="setFilter('all',this)">all</button>
+      <button class="filter-btn" onclick="setFilter('heme',this)">🩸 hematology</button>
+      <button class="filter-btn" onclick="setFilter('chem',this)">⚗️ chemistry</button>
+      <button class="filter-btn" onclick="setFilter('renal',this)">🫘 renal</button>
+      <button class="filter-btn" onclick="setFilter('lft',this)">🫀 liver</button>
+      <button class="filter-btn" onclick="setFilter('coag',this)">🔬 coagulation</button>
+      <button class="filter-btn" onclick="setFilter('abg',this)">💨 ABG</button>
+    </div>
+
+    <div class="count-bar">showing <span id="count">39</span> values</div>
+
+    <table id="labTable">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Test Name</th>
+          <th>Abbr</th>
+          <th>Normal Range</th>
+          <th>Unit</th>
+          <th>Category</th>
+          <th>Critical Values</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+      </tbody>
+    </table>
+    <div class="no-results" id="noResults" style="display:none">no results found 🐱</div>
+  </div>
+</div>
+</div>
+
+<script>
+const labs = [
+  // HEMATOLOGY
+  {name:"White Blood Cell Count",abbr:"WBC",range:"4.5 – 11.0",unit:"x10³/µL",cat:"heme",catLabel:"hematology",critical:"<2.0 or >30.0"},
+  {name:"Red Blood Cell Count",abbr:"RBC",range:"4.2 – 5.4 (F) / 4.7 – 6.1 (M)",unit:"x10⁶/µL",cat:"heme",catLabel:"hematology",critical:""},
+  {name:"Hemoglobin",abbr:"Hgb",range:"12.0–16.0 (F) / 13.5–17.5 (M)",unit:"g/dL",cat:"heme",catLabel:"hematology",critical:"<7.0 or >20.0"},
+  {name:"Hematocrit",abbr:"Hct",range:"36–46% (F) / 41–53% (M)",unit:"%",cat:"heme",catLabel:"hematology",critical:"<21% or >60%"},
+  {name:"Platelets",abbr:"PLT",range:"150,000 – 400,000",unit:"/µL",cat:"heme",catLabel:"hematology",critical:"<50,000 or >1,000,000"},
+  {name:"Mean Corpuscular Volume",abbr:"MCV",range:"80 – 100",unit:"fL",cat:"heme",catLabel:"hematology",critical:""},
+  {name:"Mean Corpuscular Hemoglobin",abbr:"MCH",range:"27 – 33",unit:"pg",cat:"heme",catLabel:"hematology",critical:""},
+  // CHEMISTRY
+  {name:"Sodium",abbr:"Na⁺",range:"136 – 145",unit:"mEq/L",cat:"chem",catLabel:"chemistry",critical:"<120 or >160"},
+  {name:"Potassium",abbr:"K⁺",range:"3.5 – 5.0",unit:"mEq/L",cat:"chem",catLabel:"chemistry",critical:"<2.5 or >6.5"},
+  {name:"Chloride",abbr:"Cl⁻",range:"98 – 106",unit:"mEq/L",cat:"chem",catLabel:"chemistry",critical:"<80 or >115"},
+  {name:"Bicarbonate",abbr:"HCO₃⁻",range:"22 – 29",unit:"mEq/L",cat:"chem",catLabel:"chemistry",critical:"<10 or >40"},
+  {name:"Blood Urea Nitrogen",abbr:"BUN",range:"7 – 25",unit:"mg/dL",cat:"renal",catLabel:"renal",critical:">100"},
+  {name:"Creatinine",abbr:"Cr",range:"0.6–1.2 (F) / 0.7–1.3 (M)",unit:"mg/dL",cat:"renal",catLabel:"renal",critical:">10"},
+  {name:"Glucose (Fasting)",abbr:"FBG",range:"70 – 99",unit:"mg/dL",cat:"chem",catLabel:"chemistry",critical:"<50 or >500"},
+  {name:"Calcium",abbr:"Ca²⁺",range:"8.5 – 10.5",unit:"mg/dL",cat:"chem",catLabel:"chemistry",critical:"<6.0 or >13.0"},
+  {name:"Magnesium",abbr:"Mg²⁺",range:"1.5 – 2.5",unit:"mEq/L",cat:"chem",catLabel:"chemistry",critical:"<1.0 or >4.9"},
+  {name:"Phosphorus",abbr:"Phos",range:"2.5 – 4.5",unit:"mg/dL",cat:"chem",catLabel:"chemistry",critical:""},
+  {name:"Total Protein",abbr:"TP",range:"6.0 – 8.3",unit:"g/dL",cat:"chem",catLabel:"chemistry",critical:""},
+  {name:"Albumin",abbr:"Alb",range:"3.5 – 5.0",unit:"g/dL",cat:"chem",catLabel:"chemistry",critical:""},
+  {name:"HbA1c",abbr:"A1c",range:"< 5.7% (normal)",unit:"%",cat:"chem",catLabel:"chemistry",critical:">9.0"},
+  // LIVER
+  {name:"Alanine Aminotransferase",abbr:"ALT",range:"7 – 56",unit:"U/L",cat:"lft",catLabel:"liver",critical:">200"},
+  {name:"Aspartate Aminotransferase",abbr:"AST",range:"10 – 40",unit:"U/L",cat:"lft",catLabel:"liver",critical:">200"},
+  {name:"Alkaline Phosphatase",abbr:"ALP",range:"44 – 147",unit:"U/L",cat:"lft",catLabel:"liver",critical:""},
+  {name:"Total Bilirubin",abbr:"T.Bili",range:"0.1 – 1.2",unit:"mg/dL",cat:"lft",catLabel:"liver",critical:">15"},
+  {name:"Direct Bilirubin",abbr:"D.Bili",range:"0.0 – 0.3",unit:"mg/dL",cat:"lft",catLabel:"liver",critical:""},
+  {name:"Gamma-Glutamyltransferase",abbr:"GGT",range:"9 – 48",unit:"U/L",cat:"lft",catLabel:"liver",critical:""},
+  // RENAL
+  {name:"Glomerular Filtration Rate",abbr:"eGFR",range:"> 60",unit:"mL/min/1.73m²",cat:"renal",catLabel:"renal",critical:"<15"},
+  {name:"Uric Acid",abbr:"UA",range:"2.4–6.0 (F) / 3.4–7.0 (M)",unit:"mg/dL",cat:"renal",catLabel:"renal",critical:""},
+  // COAGULATION
+  {name:"Prothrombin Time",abbr:"PT",range:"11 – 13.5",unit:"seconds",cat:"coag",catLabel:"coagulation",critical:">20 (non-therapeutic)"},
+  {name:"International Normalized Ratio",abbr:"INR",range:"0.8 – 1.1",unit:"ratio",cat:"coag",catLabel:"coagulation",critical:">4.0"},
+  {name:"Partial Thromboplastin Time",abbr:"aPTT",range:"25 – 35",unit:"seconds",cat:"coag",catLabel:"coagulation",critical:">70 (non-therapeutic)"},
+  {name:"D-Dimer",abbr:"D-Di",range:"< 0.5",unit:"µg/mL FEU",cat:"coag",catLabel:"coagulation",critical:""},
+  // ABG
+  {name:"pH",abbr:"pH",range:"7.35 – 7.45",unit:"",cat:"abg",catLabel:"ABG",critical:"<7.20 or >7.60"},
+  {name:"Partial Pressure O₂",abbr:"PaO₂",range:"80 – 100",unit:"mmHg",cat:"abg",catLabel:"ABG",critical:"<60"},
+  {name:"Partial Pressure CO₂",abbr:"PaCO₂",range:"35 – 45",unit:"mmHg",cat:"abg",catLabel:"ABG",critical:"<20 or >60"},
+  {name:"Oxygen Saturation",abbr:"SaO₂",range:"95 – 100",unit:"%",cat:"abg",catLabel:"ABG",critical:"<90"},
+  {name:"Base Excess",abbr:"BE",range:"-2 to +2",unit:"mEq/L",cat:"abg",catLabel:"ABG",critical:""},
+  {name:"Lactate",abbr:"Lac",range:"0.5 – 2.0",unit:"mmol/L",cat:"chem",catLabel:"chemistry",critical:">4.0"},
+  {name:"Troponin I",abbr:"TnI",range:"< 0.04",unit:"ng/mL",cat:"chem",catLabel:"chemistry",critical:">2.0"},
+];
+
+let currentFilter = 'all';
+
+function catClass(cat){ return `cat-${cat}`; }
+
+function renderTable(data){
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  if(data.length === 0){
+    document.getElementById('noResults').style.display='block';
+    document.getElementById('count').textContent='0';
+    return;
+  }
+  document.getElementById('noResults').style.display='none';
+  document.getElementById('count').textContent=data.length;
+  data.forEach(l=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="flag ${l.critical ? 'flag-crit':'flag-ok'}"></span></td>
+      <td class="td-name">${l.name}</td>
+      <td class="td-abbr">${l.abbr}</td>
+      <td class="td-range">${l.range}</td>
+      <td class="td-unit">${l.unit}</td>
+      <td class="td-cat"><span class="${catClass(l.cat)}">${l.catLabel}</span></td>
+      <td class="td-critical">${l.critical || '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function filterTable(){
+  const q = document.getElementById('search').value.toLowerCase();
+  const filtered = labs.filter(l=>{
+    const matchCat = currentFilter==='all' || l.cat===currentFilter;
+    const matchSearch = !q || l.name.toLowerCase().includes(q) || l.abbr.toLowerCase().includes(q);
+    return matchCat && matchSearch;
+  });
+  renderTable(filtered);
+}
+
+function setFilter(cat, btn){
+  currentFilter=cat;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  filterTable();
+}
+
+renderTable(labs);
+</script>
+</body>
+</html>

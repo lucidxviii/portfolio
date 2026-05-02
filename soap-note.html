@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~/tools — SOAP Note Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#1a1b26;--bg2:#16161e;--bg3:#1f2335;--panel:#24283b;--border:#2a2e42;--text:#c0caf5;--subtle:#565f89;--pink:#f7768e;--orange:#ff9e64;--yellow:#e0af68;--green:#9ece6a;--teal:#73daca;--cyan:#7dcfff;--blue:#7aa2f7;--purple:#bb9af7;--white:#a9b1d6;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9999;}
+  .wrap{max-width:1000px;margin:30px auto;padding:0 16px 60px;}
+  .kitty-window{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6);animation:fadeSlide 0.5s ease both;margin-bottom:16px;}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .titlebar{background:var(--bg3);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;}
+  .dots{display:flex;gap:7px;}.dot{width:12px;height:12px;border-radius:50%;}
+  .dr{background:var(--pink);box-shadow:0 0 6px var(--pink);}.dy{background:var(--yellow);box-shadow:0 0 6px var(--yellow);}.dg{background:var(--green);box-shadow:0 0 6px var(--green);}
+  .tab-label{font-size:12px;color:var(--blue);background:var(--bg2);border:1px solid var(--border);border-bottom:none;padding:2px 14px;border-radius:4px 4px 0 0;margin-left:10px;}
+  .back-btn{margin-left:auto;font-size:11px;color:var(--subtle);text-decoration:none;border:1px solid var(--border);border-radius:4px;padding:3px 10px;transition:all 0.15s;}
+  .back-btn:hover{color:var(--text);border-color:var(--blue);}
+  .body{padding:20px 24px;}
+  .prompt{display:flex;align-items:baseline;flex-wrap:wrap;margin-bottom:14px;font-size:13px;}
+  .pu{color:var(--green);font-weight:600;}.pat{color:var(--subtle);}.ph{color:var(--blue);font-weight:600;}.pp{color:var(--yellow);}.pa{color:var(--pink);margin:0 6px;font-weight:700;}.pc{color:var(--text);margin-left:6px;}
+
+  .top-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px;padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  label{font-size:11px;color:var(--subtle);}
+  label::before{content:'--';color:var(--orange);margin-right:4px;}
+  input,select,textarea{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:7px 10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border-color 0.15s;width:100%;}
+  input:focus,select:focus,textarea:focus{border-color:var(--blue);}
+  select option{background:var(--panel);}
+  textarea{resize:vertical;line-height:1.6;}
+
+  .soap-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  @media(max-width:640px){.soap-grid{grid-template-columns:1fr;}}
+
+  .soap-section{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .soap-header{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);}
+  .soap-letter{font-size:18px;font-weight:700;width:30px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .soap-title{font-size:12px;font-weight:600;}
+  .soap-sub{font-size:11px;color:var(--subtle);}
+  .soap-body{padding:12px;}
+
+  .s-letter{background:rgba(247,118,142,0.15);color:var(--pink);}
+  .o-letter{background:rgba(122,162,247,0.15);color:var(--blue);}
+  .a-letter{background:rgba(158,206,106,0.15);color:var(--green);}
+  .p-letter{background:rgba(187,154,247,0.15);color:var(--purple);}
+
+  .vital-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+  .vital-field{display:flex;flex-direction:column;gap:3px;}
+
+  .chip-group{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .chip{padding:4px 10px;border-radius:4px;border:1px solid var(--border);font-size:11px;cursor:pointer;color:var(--subtle);transition:all 0.15s;user-select:none;}
+  .chip:hover{border-color:var(--blue);color:var(--text);}
+  .chip.active{color:var(--bg);font-weight:600;}
+  .chip-label{font-size:10px;color:var(--subtle);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em;}
+
+  .action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+  .btn{padding:9px 20px;border-radius:5px;border:none;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;}
+  .btn-primary{background:linear-gradient(135deg,var(--blue),var(--purple));color:var(--bg);}
+  .btn-primary:hover{opacity:0.88;transform:translateY(-1px);}
+  .btn-secondary{background:var(--panel);color:var(--subtle);border:1px solid var(--border);}
+  .btn-secondary:hover{color:var(--text);border-color:var(--blue);}
+  .btn-danger{background:rgba(247,118,142,0.1);color:var(--pink);border:1px solid rgba(247,118,142,0.3);}
+  .btn-danger:hover{background:rgba(247,118,142,0.2);}
+
+  .output-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:18px;margin-top:14px;display:none;white-space:pre-wrap;font-size:12px;line-height:1.8;color:var(--white);}
+  .output-box.show{display:block;animation:fadeSlide 0.3s ease both;}
+  .out-section{color:var(--blue);font-weight:700;}
+  .out-label{color:var(--teal);}
+
+  .disclaimer{background:rgba(247,118,142,0.06);border:1px solid rgba(247,118,142,0.2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--subtle);margin-top:16px;line-height:1.7;}
+  .disclaimer strong{color:var(--pink);}
+
+  .progress{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .prog-item{font-size:10px;padding:3px 10px;border-radius:3px;border:1px solid var(--border);color:var(--subtle);}
+  .prog-item.done{border-color:var(--green);color:var(--green);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kitty-window">
+  <div class="titlebar">
+    <div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div>
+    <div class="tab-label">📋 soap-note.sh</div>
+    <a class="back-btn" href="index.html">← back to portfolio</a>
+  </div>
+  <div class="body">
+    <div class="prompt">
+      <span class="pu">nurse</span><span class="pat">@</span><span class="ph">arch</span>
+      <span style="color:var(--subtle)">:</span><span class="pp">~/tools</span>
+      <span class="pa">❯</span><span class="pc">./soap-note.sh --new</span>
+    </div>
+
+    <!-- PATIENT INFO -->
+    <div class="top-row">
+      <div class="field"><label>patient initials</label><input id="pt-init" placeholder="J.D." /></div>
+      <div class="field"><label>MRN (optional)</label><input id="pt-mrn" placeholder="000000" /></div>
+      <div class="field"><label>age</label><input id="pt-age" type="number" placeholder="65" /></div>
+      <div class="field"><label>sex</label><select id="pt-sex"><option value="">--</option><option>M</option><option>F</option><option>NB</option></select></div>
+      <div class="field"><label>date</label><input id="pt-date" type="date" /></div>
+      <div class="field"><label>room / unit</label><input id="pt-room" placeholder="4B-201" /></div>
+      <div class="field"><label>attending</label><input id="pt-md" placeholder="Dr. Smith" /></div>
+      <div class="field"><label>nurse</label><input id="pt-rn" placeholder="Your Name, SN" /></div>
+    </div>
+
+    <div class="soap-grid">
+      <!-- S -->
+      <div class="soap-section">
+        <div class="soap-header">
+          <div class="soap-letter s-letter">S</div>
+          <div><div class="soap-title" style="color:var(--pink)">Subjective</div><div class="soap-sub">patient's own words & complaints</div></div>
+        </div>
+        <div class="soap-body">
+          <div class="chip-label">chief complaint (quick select)</div>
+          <div class="chip-group" id="cc-chips">
+            <span class="chip" onclick="toggleCC(this,'chest pain')">chest pain</span>
+            <span class="chip" onclick="toggleCC(this,'shortness of breath')">SOB</span>
+            <span class="chip" onclick="toggleCC(this,'nausea/vomiting')">N/V</span>
+            <span class="chip" onclick="toggleCC(this,'abdominal pain')">abd pain</span>
+            <span class="chip" onclick="toggleCC(this,'headache')">headache</span>
+            <span class="chip" onclick="toggleCC(this,'dizziness')">dizziness</span>
+            <span class="chip" onclick="toggleCC(this,'fever/chills')">fever/chills</span>
+            <span class="chip" onclick="toggleCC(this,'pain')">pain</span>
+            <span class="chip" onclick="toggleCC(this,'weakness/fatigue')">weakness</span>
+          </div>
+          <div class="field" style="margin-bottom:8px"><label>chief complaint (free text)</label><input id="s-cc" placeholder='e.g. "My chest hurts when I breathe"' /></div>
+          <div class="field" style="margin-bottom:8px"><label>pain scale (0–10)</label><input id="s-pain" type="number" min="0" max="10" placeholder="0–10" /></div>
+          <div class="field" style="margin-bottom:8px"><label>onset & duration</label><input id="s-onset" placeholder="e.g. started 2 days ago, intermittent" /></div>
+          <div class="field"><label>additional history / patient statements</label><textarea id="s-hx" rows="3" placeholder="Allergies, relevant PMH, current medications mentioned by patient..."></textarea></div>
+        </div>
+      </div>
+
+      <!-- O -->
+      <div class="soap-section">
+        <div class="soap-header">
+          <div class="soap-letter o-letter">O</div>
+          <div><div class="soap-title" style="color:var(--blue)">Objective</div><div class="soap-sub">measurable clinical findings</div></div>
+        </div>
+        <div class="soap-body">
+          <div class="chip-label">vitals</div>
+          <div class="vital-grid">
+            <div class="vital-field"><label>BP (mmHg)</label><input id="o-bp" placeholder="120/80" /></div>
+            <div class="vital-field"><label>HR (bpm)</label><input id="o-hr" type="number" placeholder="72" /></div>
+            <div class="vital-field"><label>RR (breaths/min)</label><input id="o-rr" type="number" placeholder="16" /></div>
+            <div class="vital-field"><label>Temp (°C)</label><input id="o-temp" type="number" step="0.1" placeholder="37.0" /></div>
+            <div class="vital-field"><label>SpO₂ (%)</label><input id="o-spo2" type="number" placeholder="98" /></div>
+            <div class="vital-field"><label>Pain score</label><input id="o-pain" type="number" min="0" max="10" placeholder="0–10" /></div>
+          </div>
+          <div class="chip-label">general appearance</div>
+          <div class="chip-group">
+            <span class="chip" onclick="toggleChip(this)" data-field="o-appear">alert & oriented ×4</span>
+            <span class="chip" onclick="toggleChip(this)" data-field="o-appear">NAD</span>
+            <span class="chip" onclick="toggleChip(this)" data-field="o-appear">confused</span>
+            <span class="chip" onclick="toggleChip(this)" data-field="o-appear">diaphoretic</span>
+            <span class="chip" onclick="toggleChip(this)" data-field="o-appear">pale</span>
+            <span class="chip" onclick="toggleChip(this)" data-field="o-appear">cyanotic</span>
+          </div>
+          <div class="field"><label>physical exam / lab findings</label><textarea id="o-exam" rows="3" placeholder="Breath sounds, bowel sounds, skin turgor, relevant lab values..."></textarea></div>
+        </div>
+      </div>
+
+      <!-- A -->
+      <div class="soap-section">
+        <div class="soap-header">
+          <div class="soap-letter a-letter">A</div>
+          <div><div class="soap-title" style="color:var(--green)">Assessment</div><div class="soap-sub">nursing diagnosis & clinical impression</div></div>
+        </div>
+        <div class="soap-body">
+          <div class="chip-label">nursing diagnoses (quick select)</div>
+          <div class="chip-group" id="nd-chips">
+            <span class="chip" onclick="toggleND(this,'Acute pain')">acute pain</span>
+            <span class="chip" onclick="toggleND(this,'Impaired gas exchange')">impaired gas exchange</span>
+            <span class="chip" onclick="toggleND(this,'Fluid volume deficit')">fluid deficit</span>
+            <span class="chip" onclick="toggleND(this,'Risk for infection')">risk for infection</span>
+            <span class="chip" onclick="toggleND(this,'Impaired mobility')">impaired mobility</span>
+            <span class="chip" onclick="toggleND(this,'Altered LOC')">altered LOC</span>
+            <span class="chip" onclick="toggleND(this,'Anxiety')">anxiety</span>
+            <span class="chip" onclick="toggleND(this,'Knowledge deficit')">knowledge deficit</span>
+          </div>
+          <div class="field" style="margin-bottom:8px"><label>primary nursing diagnosis</label><input id="a-dx" placeholder="e.g. Acute pain r/t surgical incision AEB pain score 7/10" /></div>
+          <div class="field"><label>additional assessment notes</label><textarea id="a-notes" rows="3" placeholder="Clinical impression, changes from baseline, trends..."></textarea></div>
+        </div>
+      </div>
+
+      <!-- P -->
+      <div class="soap-section">
+        <div class="soap-header">
+          <div class="soap-letter p-letter">P</div>
+          <div><div class="soap-title" style="color:var(--purple)">Plan</div><div class="soap-sub">interventions & follow-up</div></div>
+        </div>
+        <div class="soap-body">
+          <div class="chip-label">common interventions</div>
+          <div class="chip-group" id="int-chips">
+            <span class="chip" onclick="toggleInt(this,'Administer ordered analgesics')">analgesics</span>
+            <span class="chip" onclick="toggleInt(this,'Monitor vitals q4h')">vitals q4h</span>
+            <span class="chip" onclick="toggleInt(this,'IV fluid maintenance')">IV fluids</span>
+            <span class="chip" onclick="toggleInt(this,'O₂ supplementation per order')">O₂ therapy</span>
+            <span class="chip" onclick="toggleInt(this,'Elevate HOB ≥30°')">HOB elevation</span>
+            <span class="chip" onclick="toggleInt(this,'Ambulation BID')">ambulation BID</span>
+            <span class="chip" onclick="toggleInt(this,'Patient education provided')">pt education</span>
+            <span class="chip" onclick="toggleInt(this,'MD notified of findings')">notify MD</span>
+            <span class="chip" onclick="toggleInt(this,'Fall precautions in place')">fall precautions</span>
+          </div>
+          <div class="field" style="margin-bottom:8px"><label>additional plan / orders</label><textarea id="p-plan" rows="2" placeholder="Specific orders, consults, labs to monitor..."></textarea></div>
+          <div class="field"><label>patient / family education</label><textarea id="p-edu" rows="2" placeholder="Education provided, patient verbalized understanding..."></textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="generateNote()">$ generate --soap-note</button>
+      <button class="btn btn-secondary" onclick="copyNote()">📋 copy to clipboard</button>
+      <button class="btn btn-danger" onclick="clearAll()">🗑️ clear all</button>
+    </div>
+
+    <div class="output-box" id="output"></div>
+
+    <div class="disclaimer">
+      <strong>⚠️ For educational & practice use only.</strong> Do not use for actual patient documentation without review and approval by a licensed supervising clinician. Always follow your institution's documentation policies.
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// Set today's date
+document.getElementById('pt-date').value = new Date().toISOString().split('T')[0];
+
+let ccList = [], ndList = [], intList = [];
+let appearList = [];
+
+function toggleCC(el, val){
+  el.classList.toggle('active');
+  if(el.classList.contains('active')){
+    el.style.background='var(--pink)';el.style.borderColor='var(--pink)';el.style.color='var(--bg)';
+    ccList.push(val);
+  } else {
+    el.style.background='';el.style.borderColor='';el.style.color='';
+    ccList=ccList.filter(v=>v!==val);
+  }
+}
+function toggleND(el, val){
+  el.classList.toggle('active');
+  if(el.classList.contains('active')){
+    el.style.background='var(--green)';el.style.borderColor='var(--green)';el.style.color='var(--bg)';
+    ndList.push(val);
+  } else {
+    el.style.background='';el.style.borderColor='';el.style.color='';
+    ndList=ndList.filter(v=>v!==val);
+  }
+}
+function toggleInt(el, val){
+  el.classList.toggle('active');
+  if(el.classList.contains('active')){
+    el.style.background='var(--purple)';el.style.borderColor='var(--purple)';el.style.color='var(--bg)';
+    intList.push(val);
+  } else {
+    el.style.background='';el.style.borderColor='';el.style.color='';
+    intList=intList.filter(v=>v!==val);
+  }
+}
+function toggleChip(el){
+  const val=el.textContent;
+  el.classList.toggle('active');
+  if(el.classList.contains('active')){
+    el.style.background='var(--blue)';el.style.borderColor='var(--blue)';el.style.color='var(--bg)';
+    appearList.push(val);
+  } else {
+    el.style.background='';el.style.borderColor='';el.style.color='';
+    appearList=appearList.filter(v=>v!==val);
+  }
+}
+
+function g(id){return document.getElementById(id).value.trim();}
+
+function generateNote(){
+  const init=g('pt-init')||'[Patient]';
+  const age=g('pt-age'); const sex=g('pt-sex'); const mrn=g('pt-mrn');
+  const date=g('pt-date'); const room=g('pt-room'); const md=g('pt-md'); const rn=g('pt-rn');
+  const cc=[...ccList,g('s-cc')].filter(Boolean).join(', ');
+  const pain=g('s-pain'); const onset=g('s-onset'); const hx=g('s-hx');
+  const bp=g('o-bp');const hr=g('o-hr');const rr=g('o-rr');const temp=g('o-temp');const spo2=g('o-spo2');const opain=g('o-pain');
+  const appear=[...appearList].join(', ');
+  const exam=g('o-exam');
+  const dx=[...ndList,g('a-dx')].filter(Boolean).join('; ');
+  const anotes=g('a-notes');
+  const ints=[...intList,g('p-plan')].filter(Boolean);
+  const edu=g('p-edu');
+
+  let note=`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NURSING SOAP NOTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Patient: ${init}${age?` | Age: ${age}`:''}${sex?` | Sex: ${sex}`:''}${mrn?` | MRN: ${mrn}`:''}
+Date: ${date||new Date().toLocaleDateString()}${room?` | Room: ${room}`:''}
+Attending: ${md||'—'} | Documented by: ${rn||'—'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[S] SUBJECTIVE
+──────────────
+Chief Complaint: ${cc||'Not documented'}
+${pain?`Pain Score: ${pain}/10\n`:''}${onset?`Onset/Duration: ${onset}\n`:''}${hx?`History/Notes: ${hx}\n`:''}
+[O] OBJECTIVE
+──────────────
+Vitals:
+  BP: ${bp||'—'} mmHg    HR: ${hr||'—'} bpm
+  RR: ${rr||'—'} br/min  Temp: ${temp||'—'}°C
+  SpO₂: ${spo2||'—'}%    Pain: ${opain||'—'}/10
+${appear?`\nGeneral Appearance: ${appear}`:''}
+${exam?`\nExam/Labs: ${exam}`:''}
+
+[A] ASSESSMENT
+──────────────
+${dx||'Nursing diagnosis not documented'}
+${anotes?`\nNotes: ${anotes}`:''}
+
+[P] PLAN
+──────────────
+Interventions:
+${ints.length?ints.map(i=>`  • ${i}`).join('\n'):'  • No interventions documented'}
+${edu?`\nPatient Education: ${edu}`:''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Documented by: ${rn||'[Nurse Name, SN]'} | ${date||new Date().toLocaleDateString()}
+[EDUCATIONAL USE ONLY — NOT FOR ACTUAL PATIENT RECORDS]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+  const box=document.getElementById('output');
+  box.textContent=note;
+  box.classList.add('show');
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function copyNote(){
+  const box=document.getElementById('output');
+  if(!box.textContent){ generateNote(); }
+  navigator.clipboard.writeText(box.textContent).then(()=>{
+    const btn=document.querySelector('.btn-secondary');
+    btn.textContent='✓ copied!';
+    setTimeout(()=>btn.textContent='📋 copy to clipboard',2000);
+  });
+}
+
+function clearAll(){
+  document.querySelectorAll('input,textarea').forEach(el=>el.value='');
+  document.querySelectorAll('select').forEach(el=>el.selectedIndex=0);
+  document.querySelectorAll('.chip.active').forEach(el=>{
+    el.classList.remove('active');el.style.background='';el.style.borderColor='';el.style.color='';
+  });
+  ccList=[];ndList=[];intList=[];appearList=[];
+  document.getElementById('output').classList.remove('show');
+  document.getElementById('output').textContent='';
+  document.getElementById('pt-date').value=new Date().toISOString().split('T')[0];
+}
+</script>
+</body>
+</html>

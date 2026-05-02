@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~/tools — IV Drip Rate Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#1a1b26;--bg2:#16161e;--bg3:#1f2335;--panel:#24283b;--border:#2a2e42;--text:#c0caf5;--subtle:#565f89;--pink:#f7768e;--orange:#ff9e64;--yellow:#e0af68;--green:#9ece6a;--teal:#73daca;--cyan:#7dcfff;--blue:#7aa2f7;--purple:#bb9af7;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9999;}
+  .wrap{max-width:860px;margin:30px auto;padding:0 16px 60px;}
+  .kitty-window{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6);animation:fadeSlide 0.5s ease both;margin-bottom:16px;}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .titlebar{background:var(--bg3);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;}
+  .dots{display:flex;gap:7px;}.dot{width:12px;height:12px;border-radius:50%;}
+  .dr{background:var(--pink);box-shadow:0 0 6px var(--pink);}.dy{background:var(--yellow);box-shadow:0 0 6px var(--yellow);}.dg{background:var(--green);box-shadow:0 0 6px var(--green);}
+  .tab-label{font-size:12px;color:var(--blue);background:var(--bg2);border:1px solid var(--border);border-bottom:none;padding:2px 14px;border-radius:4px 4px 0 0;margin-left:10px;}
+  .back-btn{margin-left:auto;font-size:11px;color:var(--subtle);text-decoration:none;border:1px solid var(--border);border-radius:4px;padding:3px 10px;transition:all 0.15s;}
+  .back-btn:hover{color:var(--text);border-color:var(--blue);}
+  .body{padding:20px 24px;}
+  .prompt{display:flex;align-items:baseline;flex-wrap:wrap;margin-bottom:14px;font-size:13px;}
+  .pu{color:var(--green);font-weight:600;}.pat{color:var(--subtle);}.ph{color:var(--blue);font-weight:600;}.pp{color:var(--yellow);}.pa{color:var(--pink);margin:0 6px;font-weight:700;}.pc{color:var(--text);margin-left:6px;}
+
+  .tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap;}
+  .tab-btn{padding:5px 14px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--subtle);font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.15s;}
+  .tab-btn:hover{color:var(--text);background:var(--panel);}.tab-btn.active{background:var(--panel);color:var(--blue);border-color:var(--blue);}
+  .calc-panel{display:none;animation:fadeSlide 0.3s ease both;}.calc-panel.active{display:block;}
+  .sec-title{color:var(--purple);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+  .sec-sub{font-size:12px;color:var(--subtle);margin-bottom:14px;}
+  .field-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:14px;}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  label{font-size:11px;color:var(--subtle);}
+  label::before{content:'--';color:var(--orange);margin-right:4px;}
+  input,select{background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:8px 10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
+  input:focus,select:focus{border-color:var(--blue);}
+  select option{background:var(--panel);}
+  .calc-btn{background:linear-gradient(135deg,var(--blue),var(--purple));border:none;border-radius:5px;color:var(--bg);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;padding:10px 24px;cursor:pointer;transition:opacity 0.2s,transform 0.15s;margin-top:4px;}
+  .calc-btn:hover{opacity:0.88;transform:translateY(-1px);}
+  .result-box{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:16px;margin-top:14px;display:none;}
+  .result-box.show{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;animation:fadeSlide 0.3s ease both;}
+  .res-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px;}
+  .res-label{font-size:10px;color:var(--subtle);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+  .res-val{font-size:22px;font-weight:700;}
+  .res-unit{font-size:12px;color:var(--subtle);margin-left:4px;}
+  .res-note{font-size:11px;color:var(--yellow);margin-top:6px;grid-column:1/-1;border-top:1px solid var(--border);padding-top:10px;}
+  .drip-visual{margin-top:14px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:16px;display:none;}
+  .drip-visual.show{display:block;}
+  .drip-title{font-size:11px;color:var(--subtle);margin-bottom:10px;}
+  .drip-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px;}
+  .drip-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width 1s ease;}
+  .drip-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--subtle);}
+  .disclaimer{background:rgba(247,118,142,0.06);border:1px solid rgba(247,118,142,0.2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--subtle);margin-top:16px;line-height:1.7;}
+  .disclaimer strong{color:var(--pink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kitty-window">
+  <div class="titlebar">
+    <div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div>
+    <div class="tab-label">⏱️ iv-drip.sh</div>
+    <a class="back-btn" href="index.html">← back to portfolio</a>
+  </div>
+  <div class="body">
+    <div class="prompt">
+      <span class="pu">nurse</span><span class="pat">@</span><span class="ph">arch</span>
+      <span style="color:var(--subtle)">:</span><span class="pp">~/tools</span>
+      <span class="pa">❯</span><span class="pc">./iv-drip.sh</span>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('flow',this)">💧 flow rate</button>
+      <button class="tab-btn" onclick="showTab('gtt',this)">🔢 gtts/min</button>
+      <button class="tab-btn" onclick="showTab('time',this)">⏱️ infusion time</button>
+      <button class="tab-btn" onclick="showTab('mcg',this)">⚗️ mcg/kg/min</button>
+    </div>
+
+    <!-- FLOW RATE -->
+    <div class="calc-panel active" id="tab-flow">
+      <div class="sec-title">IV Flow Rate (mL/hr)</div>
+      <div class="sec-sub">Volume (mL) ÷ Time (hr) = Rate (mL/hr)</div>
+      <div class="field-grid">
+        <div class="field"><label>total volume (mL)</label><input id="f-vol" type="number" placeholder="e.g. 1000" /></div>
+        <div class="field"><label>infusion time</label><input id="f-time" type="number" placeholder="e.g. 8" /></div>
+        <div class="field"><label>time unit</label><select id="f-tunit"><option>hours</option><option>minutes</option></select></div>
+      </div>
+      <button class="calc-btn" onclick="calcFlow()">$ calculate --flow-rate</button>
+      <div class="result-box" id="f-result">
+        <div class="res-card">
+          <div class="res-label">flow rate</div>
+          <div><span class="res-val" id="f-rate" style="color:var(--teal)"></span><span class="res-unit">mL/hr</span></div>
+        </div>
+        <div class="res-card">
+          <div class="res-label">mL per minute</div>
+          <div><span class="res-val" id="f-mlmin" style="color:var(--blue)"></span><span class="res-unit">mL/min</span></div>
+        </div>
+        <div class="res-note" id="f-note"></div>
+      </div>
+    </div>
+
+    <!-- GTTS -->
+    <div class="calc-panel" id="tab-gtt">
+      <div class="sec-title">Drops Per Minute (gtts/min)</div>
+      <div class="sec-sub">Volume × Drop Factor ÷ Time (min)</div>
+      <div class="field-grid">
+        <div class="field"><label>total volume (mL)</label><input id="g-vol" type="number" placeholder="e.g. 500" /></div>
+        <div class="field"><label>infusion time (min)</label><input id="g-time" type="number" placeholder="e.g. 120" /></div>
+        <div class="field"><label>drop factor (gtts/mL)</label>
+          <select id="g-df">
+            <option value="10">10 gtts/mL (macro)</option>
+            <option value="15">15 gtts/mL (macro)</option>
+            <option value="20">20 gtts/mL (macro)</option>
+            <option value="60">60 gtts/mL (micro)</option>
+          </select>
+        </div>
+      </div>
+      <button class="calc-btn" onclick="calcGtt()">$ calculate --gtts</button>
+      <div class="result-box" id="g-result">
+        <div class="res-card">
+          <div class="res-label">drip rate</div>
+          <div><span class="res-val" id="g-rate" style="color:var(--green)"></span><span class="res-unit">gtts/min</span></div>
+        </div>
+        <div class="res-card">
+          <div class="res-label">gtts per second</div>
+          <div><span class="res-val" id="g-persec" style="color:var(--purple)"></span><span class="res-unit">gtts/sec</span></div>
+        </div>
+        <div class="res-note" id="g-note"></div>
+      </div>
+    </div>
+
+    <!-- INFUSION TIME -->
+    <div class="calc-panel" id="tab-time">
+      <div class="sec-title">Infusion Time Calculator</div>
+      <div class="sec-sub">Time (hr) = Volume (mL) ÷ Rate (mL/hr)</div>
+      <div class="field-grid">
+        <div class="field"><label>total volume (mL)</label><input id="t-vol" type="number" placeholder="e.g. 1000" /></div>
+        <div class="field"><label>flow rate (mL/hr)</label><input id="t-rate" type="number" placeholder="e.g. 125" /></div>
+      </div>
+      <button class="calc-btn" onclick="calcTime()">$ calculate --infusion-time</button>
+      <div class="result-box" id="t-result">
+        <div class="res-card">
+          <div class="res-label">infusion time</div>
+          <div><span class="res-val" id="t-hours" style="color:var(--yellow)"></span><span class="res-unit">hr</span></div>
+        </div>
+        <div class="res-card">
+          <div class="res-label">in minutes</div>
+          <div><span class="res-val" id="t-mins" style="color:var(--orange)"></span><span class="res-unit">min</span></div>
+        </div>
+        <div class="res-note" id="t-note"></div>
+      </div>
+      <div class="drip-visual" id="t-visual">
+        <div class="drip-title">estimated infusion progress (if started now)</div>
+        <div class="drip-bar"><div class="drip-fill" id="t-bar" style="width:0%"></div></div>
+        <div class="drip-labels"><span>0%</span><span id="t-mid"></span><span>100%</span></div>
+      </div>
+    </div>
+
+    <!-- MCG/KG/MIN -->
+    <div class="calc-panel" id="tab-mcg">
+      <div class="sec-title">mcg/kg/min → mL/hr</div>
+      <div class="sec-sub">For vasopressors, inotropes & critical drips</div>
+      <div class="field-grid">
+        <div class="field"><label>ordered dose (mcg/kg/min)</label><input id="m-dose" type="number" placeholder="e.g. 5" step="0.1" /></div>
+        <div class="field"><label>patient weight (kg)</label><input id="m-weight" type="number" placeholder="e.g. 70" /></div>
+        <div class="field"><label>drug concentration (mg/mL)</label><input id="m-conc" type="number" placeholder="e.g. 1.6" step="0.1" /></div>
+      </div>
+      <button class="calc-btn" onclick="calcMcg()">$ calculate --critical-drip</button>
+      <div class="result-box" id="m-result">
+        <div class="res-card">
+          <div class="res-label">pump rate</div>
+          <div><span class="res-val" id="m-rate" style="color:var(--pink)"></span><span class="res-unit">mL/hr</span></div>
+        </div>
+        <div class="res-card">
+          <div class="res-label">mcg/min delivered</div>
+          <div><span class="res-val" id="m-mcgmin" style="color:var(--cyan)"></span><span class="res-unit">mcg/min</span></div>
+        </div>
+        <div class="res-note" id="m-note"></div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      <strong>⚠️ Educational use only.</strong> Always verify drip rate calculations with a second nurse and confirm against your institution's protocols. Never program a pump based solely on this tool.
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function showTab(id,btn){
+  document.querySelectorAll('.calc-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+function r2(n){return Math.round(n*100)/100;}
+function r1(n){return Math.round(n*10)/10;}
+
+function calcFlow(){
+  let vol=parseFloat(document.getElementById('f-vol').value);
+  let time=parseFloat(document.getElementById('f-time').value);
+  const tunit=document.getElementById('f-tunit').value;
+  if(!vol||!time){alert('Fill in all fields');return;}
+  if(tunit==='minutes') time=time/60;
+  const rate=vol/time;
+  const mlmin=rate/60;
+  const box=document.getElementById('f-result');
+  box.classList.add('show');
+  document.getElementById('f-rate').textContent=r1(rate);
+  document.getElementById('f-mlmin').textContent=r2(mlmin);
+  document.getElementById('f-note').textContent=`${vol} mL ÷ ${r1(time)} hr = ${r1(rate)} mL/hr`;
+}
+
+function calcGtt(){
+  const vol=parseFloat(document.getElementById('g-vol').value);
+  const time=parseFloat(document.getElementById('g-time').value);
+  const df=parseFloat(document.getElementById('g-df').value);
+  if(!vol||!time){alert('Fill in all fields');return;}
+  const rate=(vol*df)/time;
+  const box=document.getElementById('g-result');
+  box.classList.add('show');
+  document.getElementById('g-rate').textContent=Math.round(rate);
+  document.getElementById('g-persec').textContent=r2(rate/60);
+  document.getElementById('g-note').textContent=`(${vol} mL × ${df} gtts/mL) ÷ ${time} min = ${Math.round(rate)} gtts/min`;
+}
+
+function calcTime(){
+  const vol=parseFloat(document.getElementById('t-vol').value);
+  const rate=parseFloat(document.getElementById('t-rate').value);
+  if(!vol||!rate){alert('Fill in all fields');return;}
+  const hours=vol/rate;
+  const mins=hours*60;
+  const box=document.getElementById('t-result');
+  box.classList.add('show');
+  document.getElementById('t-hours').textContent=r2(hours);
+  document.getElementById('t-mins').textContent=Math.round(mins);
+  document.getElementById('t-note').textContent=`${vol} mL ÷ ${rate} mL/hr = ${r2(hours)} hr (${Math.round(mins)} min)`;
+  const vis=document.getElementById('t-visual');
+  vis.classList.add('show');
+  document.getElementById('t-mid').textContent=`${r2(hours/2)} hr`;
+  setTimeout(()=>{ document.getElementById('t-bar').style.width='0%'; },50);
+}
+
+function calcMcg(){
+  const dose=parseFloat(document.getElementById('m-dose').value);
+  const weight=parseFloat(document.getElementById('m-weight').value);
+  const conc=parseFloat(document.getElementById('m-conc').value);
+  if(!dose||!weight||!conc){alert('Fill in all fields');return;}
+  const mcgMin=dose*weight;
+  const mgMin=mcgMin/1000;
+  const mlMin=mgMin/conc;
+  const mlHr=mlMin*60;
+  const box=document.getElementById('m-result');
+  box.classList.add('show');
+  document.getElementById('m-rate').textContent=r2(mlHr);
+  document.getElementById('m-mcgmin').textContent=r1(mcgMin);
+  document.getElementById('m-note').textContent=`${dose} mcg/kg/min × ${weight} kg = ${r1(mcgMin)} mcg/min → ${r2(mlHr)} mL/hr at ${conc} mg/mL`;
+}
+</script>
+</body>
+</html>

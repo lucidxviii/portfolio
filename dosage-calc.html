@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~/tools — Drug Dosage Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#1a1b26;--bg2:#16161e;--bg3:#1f2335;--panel:#24283b;--border:#2a2e42;--text:#c0caf5;--subtle:#565f89;--pink:#f7768e;--orange:#ff9e64;--yellow:#e0af68;--green:#9ece6a;--teal:#73daca;--cyan:#7dcfff;--blue:#7aa2f7;--purple:#bb9af7;--white:#a9b1d6;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9999;}
+  .wrap{max-width:860px;margin:30px auto;padding:0 16px 60px;}
+  .kitty-window{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6);animation:fadeSlide 0.5s ease both;margin-bottom:16px;}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .titlebar{background:var(--bg3);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;}
+  .dots{display:flex;gap:7px;}.dot{width:12px;height:12px;border-radius:50%;}
+  .dr{background:var(--pink);box-shadow:0 0 6px var(--pink);}.dy{background:var(--yellow);box-shadow:0 0 6px var(--yellow);}.dg{background:var(--green);box-shadow:0 0 6px var(--green);}
+  .tab-label{font-size:12px;color:var(--blue);background:var(--bg2);border:1px solid var(--border);border-bottom:none;padding:2px 14px;border-radius:4px 4px 0 0;margin-left:10px;}
+  .back-btn{margin-left:auto;font-size:11px;color:var(--subtle);text-decoration:none;border:1px solid var(--border);border-radius:4px;padding:3px 10px;transition:all 0.15s;}
+  .back-btn:hover{color:var(--text);border-color:var(--blue);}
+  .body{padding:20px 24px;}
+  .prompt{display:flex;align-items:baseline;flex-wrap:wrap;margin-bottom:14px;font-size:13px;}
+  .pu{color:var(--green);font-weight:600;}.pat{color:var(--subtle);}.ph{color:var(--blue);font-weight:600;}.pp{color:var(--yellow);}.pa{color:var(--pink);margin:0 6px;font-weight:700;}.pc{color:var(--text);margin-left:6px;}.parg{color:var(--cyan);margin-left:6px;}
+
+  .tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap;}
+  .tab-btn{padding:5px 14px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--subtle);font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.15s;}
+  .tab-btn:hover{color:var(--text);background:var(--panel);}
+  .tab-btn.active{background:var(--panel);color:var(--blue);border-color:var(--blue);}
+
+  .calc-panel{display:none;animation:fadeSlide 0.3s ease both;}
+  .calc-panel.active{display:block;}
+
+  .sec-title{color:var(--purple);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;}
+
+  .field-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:14px;}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  label{font-size:11px;color:var(--subtle);}
+  label::before{content:'--';color:var(--orange);margin-right:4px;}
+  input,select{background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:8px 10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
+  input:focus,select:focus{border-color:var(--blue);}
+  select option{background:var(--panel);}
+
+  .calc-btn{background:linear-gradient(135deg,var(--blue),var(--purple));border:none;border-radius:5px;color:var(--bg);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;padding:10px 24px;cursor:pointer;transition:opacity 0.2s,transform 0.15s;margin-top:4px;}
+  .calc-btn:hover{opacity:0.88;transform:translateY(-1px);}
+
+  .result-box{background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:0 6px 6px 0;padding:16px;margin-top:14px;display:none;}
+  .result-box.show{display:block;animation:fadeSlide 0.3s ease both;}
+  .result-label{font-size:11px;color:var(--subtle);margin-bottom:6px;}
+  .result-value{font-size:28px;font-weight:700;color:var(--teal);}
+  .result-unit{font-size:14px;color:var(--subtle);margin-left:6px;}
+  .result-note{font-size:11px;color:var(--yellow);margin-top:8px;}
+  .result-warn{font-size:11px;color:var(--pink);margin-top:6px;}
+
+  .disclaimer{background:rgba(247,118,142,0.06);border:1px solid rgba(247,118,142,0.2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--subtle);margin-top:16px;line-height:1.7;}
+  .disclaimer strong{color:var(--pink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kitty-window">
+  <div class="titlebar">
+    <div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div>
+    <div class="tab-label">💊 dosage-calc.sh</div>
+    <a class="back-btn" href="index.html">← back to portfolio</a>
+  </div>
+  <div class="body">
+    <div class="prompt">
+      <span class="pu">nurse</span><span class="pat">@</span><span class="ph">arch</span>
+      <span style="color:var(--subtle)">:</span><span class="pp">~/tools</span>
+      <span class="pa">❯</span><span class="pc">./dosage-calc.sh</span>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('basic',this)">💊 basic dose</button>
+      <button class="tab-btn" onclick="showTab('weightbased',this)">⚖️ weight-based</button>
+      <button class="tab-btn" onclick="showTab('concentration',this)">🧪 concentration</button>
+      <button class="tab-btn" onclick="showTab('bsa',this)">📐 BSA dose</button>
+    </div>
+
+    <!-- BASIC -->
+    <div class="calc-panel active" id="tab-basic">
+      <div class="sec-title">Basic Dose Calculator</div>
+      <p style="font-size:12px;color:var(--subtle);margin-bottom:14px;">Desired dose ÷ dose on hand × quantity on hand</p>
+      <div class="field-grid">
+        <div class="field"><label>desired dose</label><input id="b-desired" type="number" placeholder="e.g. 500" /></div>
+        <div class="field"><label>desired unit</label><select id="b-dunit"><option>mg</option><option>mcg</option><option>g</option><option>mEq</option></select></div>
+        <div class="field"><label>dose on hand</label><input id="b-hand" type="number" placeholder="e.g. 250" /></div>
+        <div class="field"><label>hand unit</label><select id="b-hunit"><option>mg</option><option>mcg</option><option>g</option><option>mEq</option></select></div>
+        <div class="field"><label>quantity on hand</label><input id="b-qty" type="number" placeholder="e.g. 1" /></div>
+        <div class="field"><label>quantity form</label><select id="b-qform"><option>tablet(s)</option><option>capsule(s)</option><option>mL</option><option>ampule(s)</option></select></div>
+      </div>
+      <button class="calc-btn" onclick="calcBasic()">$ calculate --dose</button>
+      <div class="result-box" id="b-result">
+        <div class="result-label">administer</div>
+        <div><span class="result-value" id="b-val"></span><span class="result-unit" id="b-uval"></span></div>
+        <div class="result-note" id="b-note"></div>
+      </div>
+    </div>
+
+    <!-- WEIGHT BASED -->
+    <div class="calc-panel" id="tab-weightbased">
+      <div class="sec-title">Weight-Based Dose Calculator</div>
+      <p style="font-size:12px;color:var(--subtle);margin-bottom:14px;">Dose (mg/kg) × patient weight</p>
+      <div class="field-grid">
+        <div class="field"><label>dose per kg</label><input id="w-dose" type="number" placeholder="e.g. 10" /></div>
+        <div class="field"><label>dose unit</label><select id="w-dunit"><option>mg/kg</option><option>mcg/kg</option><option>g/kg</option></select></div>
+        <div class="field"><label>patient weight</label><input id="w-weight" type="number" placeholder="e.g. 70" /></div>
+        <div class="field"><label>weight unit</label><select id="w-wunit" onchange="updateWeightLabel()"><option>kg</option><option>lbs</option></select></div>
+        <div class="field"><label>doses per day (optional)</label><input id="w-freq" type="number" placeholder="e.g. 3" /></div>
+      </div>
+      <button class="calc-btn" onclick="calcWeight()">$ calculate --weight-based</button>
+      <div class="result-box" id="w-result">
+        <div class="result-label">total dose</div>
+        <div><span class="result-value" id="w-val"></span><span class="result-unit" id="w-unit"></span></div>
+        <div class="result-note" id="w-note"></div>
+      </div>
+    </div>
+
+    <!-- CONCENTRATION -->
+    <div class="calc-panel" id="tab-concentration">
+      <div class="sec-title">IV Concentration / Volume Calculator</div>
+      <p style="font-size:12px;color:var(--subtle);margin-bottom:14px;">Volume = (desired dose ÷ concentration) × 1000</p>
+      <div class="field-grid">
+        <div class="field"><label>desired dose (mg)</label><input id="c-dose" type="number" placeholder="e.g. 200" /></div>
+        <div class="field"><label>concentration (mg/mL)</label><input id="c-conc" type="number" placeholder="e.g. 5" /></div>
+      </div>
+      <button class="calc-btn" onclick="calcConc()">$ calculate --iv-volume</button>
+      <div class="result-box" id="c-result">
+        <div class="result-label">volume to draw</div>
+        <div><span class="result-value" id="c-val"></span><span class="result-unit">mL</span></div>
+        <div class="result-note" id="c-note"></div>
+      </div>
+    </div>
+
+    <!-- BSA -->
+    <div class="calc-panel" id="tab-bsa">
+      <div class="sec-title">BSA-Based Dose Calculator</div>
+      <p style="font-size:12px;color:var(--subtle);margin-bottom:14px;">Mosteller formula: BSA = √(height × weight / 3600)</p>
+      <div class="field-grid">
+        <div class="field"><label>height (cm)</label><input id="bsa-h" type="number" placeholder="e.g. 165" /></div>
+        <div class="field"><label>weight (kg)</label><input id="bsa-w" type="number" placeholder="e.g. 65" /></div>
+        <div class="field"><label>dose per m²</label><input id="bsa-d" type="number" placeholder="e.g. 25" /></div>
+        <div class="field"><label>dose unit</label><select id="bsa-u"><option>mg/m²</option><option>mcg/m²</option><option>g/m²</option></select></div>
+      </div>
+      <button class="calc-btn" onclick="calcBSA()">$ calculate --bsa</button>
+      <div class="result-box" id="bsa-result">
+        <div class="result-label">total dose</div>
+        <div><span class="result-value" id="bsa-val"></span><span class="result-unit" id="bsa-unit"></span></div>
+        <div class="result-note" id="bsa-note"></div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      <strong>⚠️ Educational use only.</strong> Always verify calculations with a licensed pharmacist or supervising clinician before administering any medication. This tool does not replace clinical judgment.
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function showTab(id, btn){
+  document.querySelectorAll('.calc-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function round2(n){ return Math.round(n*100)/100; }
+
+function showResult(boxId, val, unit, note, warn){
+  const box = document.getElementById(boxId);
+  box.classList.add('show');
+  if(document.getElementById(boxId.replace('result','val'))) document.getElementById(boxId.replace('result','val')).textContent = val;
+  if(document.getElementById(boxId.replace('result','unit'))) document.getElementById(boxId.replace('result','unit')).textContent = unit||'';
+  if(document.getElementById(boxId.replace('result','uval'))) document.getElementById(boxId.replace('result','uval')).textContent = unit||'';
+  if(document.getElementById(boxId.replace('result','note'))) document.getElementById(boxId.replace('result','note')).textContent = note||'';
+}
+
+function calcBasic(){
+  const desired = parseFloat(document.getElementById('b-desired').value);
+  const hand = parseFloat(document.getElementById('b-hand').value);
+  const qty = parseFloat(document.getElementById('b-qty').value);
+  const form = document.getElementById('b-qform').value;
+  if(!desired||!hand||!qty){ alert('Please fill in all fields'); return; }
+  const result = (desired/hand)*qty;
+  const box = document.getElementById('b-result');
+  box.classList.add('show');
+  document.getElementById('b-val').textContent = round2(result);
+  document.getElementById('b-uval').textContent = form;
+  document.getElementById('b-note').textContent = `Formula: (${desired} ÷ ${hand}) × ${qty} = ${round2(result)} ${form}`;
+}
+
+function calcWeight(){
+  let weight = parseFloat(document.getElementById('w-weight').value);
+  const wunit = document.getElementById('w-wunit').value;
+  const dose = parseFloat(document.getElementById('w-dose').value);
+  const dunit = document.getElementById('w-dunit').value;
+  const freq = parseFloat(document.getElementById('w-freq').value)||1;
+  if(!weight||!dose){ alert('Please fill in required fields'); return; }
+  if(wunit==='lbs') weight = weight/2.205;
+  const total = dose*weight;
+  const unit = dunit.replace('/kg','');
+  const box = document.getElementById('w-result');
+  box.classList.add('show');
+  document.getElementById('w-val').textContent = round2(total);
+  document.getElementById('w-unit').textContent = unit;
+  document.getElementById('w-note').textContent = freq>1
+    ? `Single dose: ${round2(total)} ${unit} | Daily total (×${freq}): ${round2(total*freq)} ${unit}`
+    : `Weight used: ${round2(weight)} kg | ${dose} ${dunit} × ${round2(weight)} kg`;
+}
+
+function calcConc(){
+  const dose = parseFloat(document.getElementById('c-dose').value);
+  const conc = parseFloat(document.getElementById('c-conc').value);
+  if(!dose||!conc){ alert('Please fill in all fields'); return; }
+  const vol = dose/conc;
+  const box = document.getElementById('c-result');
+  box.classList.add('show');
+  document.getElementById('c-val').textContent = round2(vol);
+  document.getElementById('c-note').textContent = `${dose} mg ÷ ${conc} mg/mL = ${round2(vol)} mL`;
+}
+
+function calcBSA(){
+  const h = parseFloat(document.getElementById('bsa-h').value);
+  const w = parseFloat(document.getElementById('bsa-w').value);
+  const d = parseFloat(document.getElementById('bsa-d').value);
+  const u = document.getElementById('bsa-u').value;
+  if(!h||!w||!d){ alert('Please fill in all fields'); return; }
+  const bsa = Math.sqrt((h*w)/3600);
+  const total = d*bsa;
+  const unit = u.replace('/m²','');
+  const box = document.getElementById('bsa-result');
+  box.classList.add('show');
+  document.getElementById('bsa-val').textContent = round2(total);
+  document.getElementById('bsa-unit').textContent = unit;
+  document.getElementById('bsa-note').textContent = `BSA: ${round2(bsa)} m² | ${d} ${u} × ${round2(bsa)} m² = ${round2(total)} ${unit}`;
+}
+</script>
+</body>
+</html>
