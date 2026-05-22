@@ -375,30 +375,6 @@
   }
   .pc-link:hover { color: var(--pink); }
 
-  /* ── CERTIFICATIONS ──────────────────────────── */
-  .certs-list { display: flex; flex-direction: column; gap: 10px; }
-
-  .cert-item {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--teal);
-    border-radius: 0 6px 6px 0;
-    padding: 12px 16px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 10px;
-    transition: border-left-color 0.2s, transform 0.2s;
-  }
-  .cert-item:hover {
-    border-left-color: var(--pink);
-    transform: translateX(4px);
-  }
-
-  .cert-name  { color: var(--text); font-weight: 600; font-size: 13px; }
-  .cert-org   { color: var(--subtle); font-size: 11px; margin-top: 2px; }
-  .cert-date  { color: var(--yellow); font-size: 11px; white-space: nowrap; }
-
   /* ── SKILLS ──────────────────────────────────── */
   .skills-grid {
     display: grid;
@@ -445,37 +421,6 @@
   @keyframes growBar {
     from { width: 0 !important; }
   }
-
-  /* ── BLOG ────────────────────────────────────── */
-  .blog-list { display: flex; flex-direction: column; gap: 10px; }
-
-  .blog-item {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px 16px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 10px;
-    align-items: start;
-    transition: border-color 0.2s;
-    cursor: pointer;
-  }
-  .blog-item:hover { border-color: var(--purple); }
-
-  .blog-title { color: var(--blue); font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-  .blog-excerpt { color: var(--subtle); font-size: 12px; }
-  .blog-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
-  .blog-tag {
-    font-size: 10px;
-    color: var(--orange);
-    background: rgba(255,158,100,0.08);
-    border: 1px solid rgba(255,158,100,0.2);
-    border-radius: 3px;
-    padding: 1px 6px;
-  }
-  .blog-date { color: var(--subtle); font-size: 11px; white-space: nowrap; }
-  .blog-readtime { color: var(--teal); font-size: 10px; margin-top: 3px; text-align: right; }
 
   /* ── CONTACT ─────────────────────────────────── */
   .contact-grid {
@@ -574,6 +519,9 @@
   }
   .pal { height: 6px; flex: 1; border-radius: 2px; }
 
+  /* ── HIDDEN SECTIONS ─────────────────────────── */
+  .hidden-section { display: none; }
+
   /* ── RESPONSIVE ──────────────────────────────── */
   @media (max-width: 640px) {
     .hero-grid    { grid-template-columns: 1fr; }
@@ -581,9 +529,6 @@
     .contact-grid { grid-template-columns: 1fr; }
     .neofetch     { grid-template-columns: 1fr; }
     .nf-cat       { display: none; }
-  }
-    .hidden-section {
-  display: none;
   }
 </style>
 </head>
@@ -631,7 +576,7 @@
           </div>
           <div class="hero-role">Student Nurse</div>
           <p class="hero-bio">
-            I’m a nursing student with a strong interest in healthcare technology and virtual assistance.
+            I'm a nursing student with a strong interest in healthcare technology and virtual assistance.
             Currently pursuing my degree while building small tools that make clinical workflows smarter,
             documentation easier, and patient care more efficient. I explore how systems like EHRs,
             automation, and AI can support healthcare professionals in real-world settings.
@@ -812,115 +757,42 @@
           </div>
         </div>
 
+        <!-- ── NEW: Fluid Balance Tracker ── -->
         <div class="project-card">
           <div class="pc-header">
-            <span class="pc-name">📱 NurseShift <span style="color:var(--subtle);font-size:10px;font-weight:400">[wip]</span></span>
-            <span class="pc-lang"><span class="lang-dot" style="background:var(--orange)"></span>Dart</span>
+            <span class="pc-name">💧 Fluid Balance Tracker</span>
+            <span class="pc-lang"><span class="lang-dot" style="background:var(--cyan)"></span>HTML/JS</span>
           </div>
-          <p class="pc-desc">Flutter app for shift handoff communication. Structured SBAR format, task checklists, and patient flag system built for handoff safety.</p>
+          <p class="pc-desc">Shift-based I&amp;O chart with automatic net balance computation. Tracks oral, IV, and NGT intake vs. urine, wound, and other outputs — with hourly UO rate and fluid status alerts.</p>
           <div class="pc-tags">
-            <span class="pc-tag">Flutter</span>
-            <span class="pc-tag">Firebase</span>
-            <span class="pc-tag">SBAR</span>
+            <span class="pc-tag">I&amp;O Chart</span>
+            <span class="pc-tag">fluid balance</span>
+            <span class="pc-tag">ICU / ward</span>
+            <span class="pc-tag">UO rate</span>
           </div>
           <div class="pc-links">
-            <a class="pc-link" href="#">[coming soon]</a>
+            <a class="pc-link" href="fluid-balance.html">[open tool]</a>
+            <a class="pc-link" href="fluid-balance.html" target="_blank">[new tab]</a>
           </div>
         </div>
 
+        <!-- ── NEW: ABG + Electrolyte Interpreter ── -->
         <div class="project-card">
           <div class="pc-header">
-            <span class="pc-name">🧠 ClinicalQA <span style="color:var(--subtle);font-size:10px;font-weight:400">[wip]</span></span>
-            <span class="pc-lang"><span class="lang-dot" style="background:var(--green)"></span>Python</span>
+            <span class="pc-name">🧠 ABG + Electrolyte Interpreter</span>
+            <span class="pc-lang"><span class="lang-dot" style="background:var(--purple)"></span>HTML/JS</span>
           </div>
-          <p class="pc-desc">RAG-powered Q&amp;A tool trained on clinical guidelines (JNC, AHA, WHO). Helps nursing students quickly reference evidence-based protocols.</p>
+          <p class="pc-desc">Clinical decision support for acid-base analysis. Input pH, PaCO₂, HCO₃, and electrolytes — get classification, compensation type, anion gap, and per-electrolyte imbalance hints with causes.</p>
           <div class="pc-tags">
-            <span class="pc-tag">LangChain</span>
-            <span class="pc-tag">RAG</span>
-            <span class="pc-tag">Chroma</span>
-            <span class="pc-tag">Ollama</span>
+            <span class="pc-tag">ABG</span>
+            <span class="pc-tag">acid-base</span>
+            <span class="pc-tag">electrolytes</span>
+            <span class="pc-tag">anion gap</span>
           </div>
           <div class="pc-links">
-            <a class="pc-link" href="#">[coming soon]</a>
+            <a class="pc-link" href="abg-interpreter.html">[open tool]</a>
+            <a class="pc-link" href="abg-interpreter.html" target="_blank">[new tab]</a>
           </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</div>
-</section>
-
-<!-- ── CERTIFICATIONS ─────────────────────────────────── -->
-<section id="certs" class="hidden-section">
-<div class="kitty-window" style="animation-delay:0.15s">
-  <div class="kitty-titlebar">
-    <div class="kitty-dots">
-      <div class="dot dot-red"></div>
-      <div class="dot dot-yellow"></div>
-      <div class="dot dot-green"></div>
-    </div>
-    <div class="kitty-tabs">
-      <div class="tab active"><span class="tab-icon">🏅</span>certs.json</div>
-    </div>
-  </div>
-  <div class="kitty-body">
-    <p class="sec-comment">Certifications &amp; credentials earned</p>
-    <div class="prompt">
-      <span class="p-user">nurse</span><span class="p-at">@</span><span class="p-host">arch</span>
-      <span class="p-sep">:</span><span class="p-path">~/portfolio</span>
-      <span class="p-arrow">❯</span>
-      <span class="p-cmd">jq</span><span class="p-arg">'.[]'</span><span class="p-flag">certs.json</span>
-    </div>
-    <div class="output">
-      <div class="certs-list">
-
-        <div class="cert-item">
-          <div>
-            <div class="cert-name">🩺 Basic Life Support (BLS)</div>
-            <div class="cert-org">American Heart Association</div>
-          </div>
-          <div class="cert-date">2024-03</div>
-        </div>
-
-        <div class="cert-item" style="border-left-color:var(--blue)">
-          <div>
-            <div class="cert-name">🔒 HIPAA Compliance Training</div>
-            <div class="cert-org">HHS Office for Civil Rights</div>
-          </div>
-          <div class="cert-date">2024-01</div>
-        </div>
-
-        <div class="cert-item" style="border-left-color:var(--purple)">
-          <div>
-            <div class="cert-name">🤖 AI for Healthcare Professionals</div>
-            <div class="cert-org">Coursera / Johns Hopkins</div>
-          </div>
-          <div class="cert-date">2023-11</div>
-        </div>
-
-        <div class="cert-item" style="border-left-color:var(--orange)">
-          <div>
-            <div class="cert-name">📊 Health Informatics Fundamentals</div>
-            <div class="cert-org">AMIA 10×10</div>
-          </div>
-          <div class="cert-date">2023-08</div>
-        </div>
-
-        <div class="cert-item" style="border-left-color:var(--yellow)">
-          <div>
-            <div class="cert-name">💻 Python for Everybody</div>
-            <div class="cert-org">University of Michigan / Coursera</div>
-          </div>
-          <div class="cert-date">2023-05</div>
-        </div>
-
-        <div class="cert-item" style="border-left-color:var(--green)">
-          <div>
-            <div class="cert-name">🧬 Genomics Data Science</div>
-            <div class="cert-org">Johns Hopkins / Coursera</div>
-          </div>
-          <div class="cert-date">2022-12</div>
         </div>
 
       </div>
@@ -993,50 +865,26 @@
           </div>
         </div>
 
-            <div class="skill-group">
-      <div class="sg-title" style="color:var(--yellow)">🧑 Virtual Assistance 💻</div>
-    
-      <div class="skill-bar-row">
-        <div class="sbr-top">
-          <span class="sbr-name">Healthcare</span>
-          <span class="sbr-pct">75%</span>
+        <div class="skill-group">
+          <div class="sg-title" style="color:var(--yellow)">🧑 Virtual Assistance 💻</div>
+          <div class="skill-bar-row">
+            <div class="sbr-top"><span class="sbr-name">Healthcare</span><span class="sbr-pct">75%</span></div>
+            <div class="skill-bar"><div class="skill-fill" style="width:75%;background:var(--yellow)"></div></div>
+          </div>
+          <div class="skill-bar-row">
+            <div class="sbr-top"><span class="sbr-name">Customer Service</span><span class="sbr-pct">85%</span></div>
+            <div class="skill-bar"><div class="skill-fill" style="width:85%;background:var(--yellow)"></div></div>
+          </div>
+          <div class="skill-bar-row">
+            <div class="sbr-top"><span class="sbr-name">Administrative</span><span class="sbr-pct">80%</span></div>
+            <div class="skill-bar"><div class="skill-fill" style="width:80%;background:var(--yellow)"></div></div>
+          </div>
+          <div class="skill-bar-row">
+            <div class="sbr-top"><span class="sbr-name">Social Media</span><span class="sbr-pct">70%</span></div>
+            <div class="skill-bar"><div class="skill-fill" style="width:70%;background:var(--yellow)"></div></div>
+          </div>
         </div>
-        <div class="skill-bar">
-          <div class="skill-fill" style="width:75%;background:var(--yellow)"></div>
-        </div>
-      </div>
-    
-      <div class="skill-bar-row">
-        <div class="sbr-top">
-          <span class="sbr-name">Customer Service</span>
-          <span class="sbr-pct">85%</span>
-        </div>
-        <div class="skill-bar">
-          <div class="skill-fill" style="width:85%;background:var(--yellow)"></div>
-        </div>
-      </div>
-    
-      <div class="skill-bar-row">
-        <div class="sbr-top">
-          <span class="sbr-name">Administrative</span>
-          <span class="sbr-pct">80%</span>
-        </div>
-        <div class="skill-bar">
-          <div class="skill-fill" style="width:80%;background:var(--yellow)"></div>
-        </div>
-      </div>
-    
-      <div class="skill-bar-row">
-        <div class="sbr-top">
-          <span class="sbr-name">Social Media</span>
-          <span class="sbr-pct">70%</span>
-        </div>
-        <div class="skill-bar">
-          <div class="skill-fill" style="width:70%;background:var(--yellow)"></div>
-        </div>
-      </div>
-    </div>
-        
+
         <div class="skill-group">
           <div class="sg-title" style="color:var(--purple)">🐧 Tools / Systems</div>
           <div class="skill-bar-row">
@@ -1050,100 +898,6 @@
           <div class="skill-bar-row">
             <div class="sbr-top"><span class="sbr-name">Computer Troubleshooting</span><span class="sbr-pct">65%</span></div>
             <div class="skill-bar"><div class="skill-fill" style="width:52%;background:var(--purple)"></div></div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</div>
-</section>
-
-<!-- ── BLOG ───────────────────────────────────────────── -->
-<section id="blog" class="hidden-section">
-<div class="kitty-window" style="animation-delay:0.25s">
-  <div class="kitty-titlebar">
-    <div class="kitty-dots">
-      <div class="dot dot-red"></div>
-      <div class="dot dot-yellow"></div>
-      <div class="dot dot-green"></div>
-    </div>
-    <div class="kitty-tabs">
-      <div class="tab active"><span class="tab-icon">📝</span>blog/</div>
-    </div>
-  </div>
-  <div class="kitty-body">
-    <p class="sec-comment">Writing about healthcare, tech, and the space between</p>
-    <div class="prompt">
-      <span class="p-user">nurse</span><span class="p-at">@</span><span class="p-host">arch</span>
-      <span class="p-sep">:</span><span class="p-path">~/portfolio/blog</span>
-      <span class="p-arrow">❯</span>
-      <span class="p-cmd">ls</span><span class="p-flag">-lt</span><span class="p-arg">*.md</span>
-    </div>
-    <div class="output">
-      <div class="blog-list">
-
-        <div class="blog-item">
-          <div>
-            <div class="blog-title">Why Every Nurse Should Learn to Code (Even a Little)</div>
-            <div class="blog-excerpt">Clinical workflows are broken. Here's how a few lines of Python changed how I document my shifts...</div>
-            <div class="blog-tags">
-              <span class="blog-tag">nursing</span>
-              <span class="blog-tag">python</span>
-              <span class="blog-tag">workflow</span>
-            </div>
-          </div>
-          <div>
-            <div class="blog-date">2024-04-12</div>
-            <div class="blog-readtime">6 min read</div>
-          </div>
-        </div>
-
-        <div class="blog-item">
-          <div>
-            <div class="blog-title">Setting Up Neovim for Clinical Note Writing</div>
-            <div class="blog-excerpt">My dotfiles setup that turns Neovim into a structured SOAPIE note powerhouse with custom snippets...</div>
-            <div class="blog-tags">
-              <span class="blog-tag">neovim</span>
-              <span class="blog-tag">dotfiles</span>
-              <span class="blog-tag">productivity</span>
-            </div>
-          </div>
-          <div>
-            <div class="blog-date">2024-03-01</div>
-            <div class="blog-readtime">9 min read</div>
-          </div>
-        </div>
-
-        <div class="blog-item">
-          <div>
-            <div class="blog-title">FHIR Explained for Nursing Students</div>
-            <div class="blog-excerpt">No CS degree required. Here's what FHIR actually is and why it matters for the future of patient data...</div>
-            <div class="blog-tags">
-              <span class="blog-tag">FHIR</span>
-              <span class="blog-tag">health informatics</span>
-              <span class="blog-tag">explainer</span>
-            </div>
-          </div>
-          <div>
-            <div class="blog-date">2024-01-18</div>
-            <div class="blog-readtime">7 min read</div>
-          </div>
-        </div>
-
-        <div class="blog-item">
-          <div>
-            <div class="blog-title">Arch Linux on a Hospital Laptop: A Cautionary Tale</div>
-            <div class="blog-excerpt">I installed Arch on my clinical laptop. Here's what happened next (spoiler: it actually worked)...</div>
-            <div class="blog-tags">
-              <span class="blog-tag">arch linux</span>
-              <span class="blog-tag">humor</span>
-              <span class="blog-tag">linux</span>
-            </div>
-          </div>
-          <div>
-            <div class="blog-date">2023-11-05</div>
-            <div class="blog-readtime">5 min read</div>
           </div>
         </div>
 
@@ -1187,7 +941,7 @@
 
         <div class="contact-grid">
 
-          <!-- FORM (UI ONLY FOR NOW) -->
+          <!-- FORM -->
           <div class="contact-form">
             <div class="cf-title">send_message()</div>
 
@@ -1211,7 +965,7 @@
             </button>
           </div>
 
-          <!-- LINKS (YOUR REAL INFO) -->
+          <!-- LINKS -->
           <div class="contact-links">
 
             <a class="cl-item" href="https://github.com/lucidxviii" target="_blank">
@@ -1279,5 +1033,5 @@
 </section>
 
 </div><!-- kitty-root -->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body>
+</body>
 </html>
