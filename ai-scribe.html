@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~/tools — AI Clinical Scribe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1a1b26;--bg2:#16161e;--bg3:#1f2335;--panel:#24283b;--border:#2a2e42;
+    --text:#c0caf5;--subtle:#565f89;--pink:#f7768e;--red:#f7768e;--orange:#ff9e64;
+    --yellow:#e0af68;--green:#9ece6a;--teal:#73daca;--cyan:#7dcfff;--blue:#7aa2f7;
+    --purple:#bb9af7;--magenta:#c678dd;--white:#a9b1d6;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(circle at 12% 8%, rgba(187,154,247,0.10), transparent 42%),
+      radial-gradient(circle at 88% 0%, rgba(122,162,247,0.08), transparent 40%),
+      var(--bg);
+    min-height:100vh;
+    color:var(--text);
+    font-family:'Inter',-apple-system,'Segoe UI',sans-serif;
+    font-size:14px;
+    line-height:1.6;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  @keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(247,118,142,0.5)}50%{box-shadow:0 0 0 8px rgba(247,118,142,0)}}
+
+  .wrap{max-width:1100px;margin:36px auto;padding:0 20px 60px;}
+
+  .panel{
+    background:rgba(36,40,59,0.55);
+    backdrop-filter:blur(20px);
+    border:1px solid var(--border);
+    border-radius:24px;
+    overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,0.45);
+    animation:fadeSlide 0.5s ease both;
+    margin-bottom:20px;
+  }
+  .panel-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 24px;
+    border-bottom:1px solid var(--border);
+    background:rgba(31,35,53,0.5);
+    flex-wrap:wrap;gap:10px;
+  }
+  .panel-header-title{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;}
+  .panel-header-sub{font-size:11.5px;color:var(--subtle);margin-top:2px;font-weight:500;}
+  .panel-body{padding:26px;}
+
+  .header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .back-link,.icon-link{
+    font-size:11.5px;font-weight:600;color:var(--white);
+    background:var(--bg3);border:1px solid var(--border);
+    padding:7px 15px;border-radius:999px;text-decoration:none;
+    transition:all 0.15s;cursor:pointer;
+  }
+  .back-link:hover,.icon-link:hover{color:var(--bg2);background:var(--purple);border-color:var(--purple);}
+
+  .group-label{
+    font-size:10.5px;font-weight:700;text-transform:uppercase;
+    letter-spacing:0.09em;color:var(--subtle);margin:4px 0 10px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .group-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  .ai-badge{
+    display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;
+    color:var(--teal);background:rgba(115,218,202,0.1);
+    border:1px solid rgba(115,218,202,0.3);border-radius:999px;
+    padding:4px 12px;margin-bottom:16px;
+  }
+
+  /* patient info */
+  .top-row{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;
+    margin-bottom:24px;padding:16px;background:var(--bg3);
+    border:1px solid var(--border);border-radius:16px;
+  }
+  .field{display:flex;flex-direction:column;gap:5px;}
+  label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--subtle);}
+  input,select,textarea{
+    background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+    padding:8px 11px;color:var(--text);font-family:'JetBrains Mono',monospace;
+    font-size:12px;outline:none;transition:border-color 0.15s;width:100%;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--purple);}
+  select option{background:var(--panel);}
+  textarea{resize:vertical;line-height:1.6;}
+
+  /* recording controls */
+  .rec-bar{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
+    padding:16px 18px;background:var(--bg3);border:1px solid var(--border);
+    border-radius:16px;margin-bottom:20px;
+  }
+  .rec-status{display:flex;align-items:center;gap:12px;}
+  .rec-dot{
+    width:10px;height:10px;border-radius:50%;background:var(--subtle);flex-shrink:0;
+    transition:background 0.2s;
+  }
+  .rec-dot.active{background:var(--pink);animation:recPulse 1.5s ease infinite;}
+  .rec-dot.paused{background:var(--yellow);}
+  .rec-label{font-size:12px;font-weight:600;color:var(--white);}
+  .rec-timer{
+    font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;
+    color:var(--cyan);letter-spacing:0.05em;
+  }
+  .rec-controls{display:flex;gap:8px;flex-wrap:wrap;}
+
+  /* transcript */
+  .transcript-box{
+    background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+    padding:18px;min-height:140px;max-height:280px;overflow-y:auto;
+    font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;
+    color:var(--white);margin-bottom:20px;
+  }
+  .transcript-box:empty::before{
+    content:'Transcript will appear here as you speak…';
+    color:var(--subtle);font-style:italic;
+  }
+  .transcript-interim{color:var(--subtle);opacity:0.7;}
+
+  /* extraction chips */
+  .extract-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:22px;}
+  .extract-card{
+    background:var(--bg3);border:1px solid var(--border);border-radius:14px;
+    padding:14px;transition:border-color 0.2s;
+  }
+  .extract-card:hover{border-color:var(--blue);}
+  .extract-title{
+    font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
+    color:var(--subtle);margin-bottom:10px;display:flex;align-items:center;gap:6px;
+  }
+  .extract-title .dot{width:6px;height:6px;border-radius:50%;}
+  .dot-symptoms{background:var(--pink);}
+  .dot-meds{background:var(--purple);}
+  .dot-allergies{background:var(--orange);}
+  .dot-vitals{background:var(--cyan);}
+  .dot-cc{background:var(--green);}
+  .chip-group{display:flex;flex-wrap:wrap;gap:6px;min-height:28px;}
+  .chip{
+    padding:4px 11px;border-radius:999px;border:1px solid var(--border);
+    font-size:10.5px;font-weight:600;color:var(--white);
+    background:var(--panel);transition:all 0.15s;
+  }
+  .chip.symptoms{border-color:rgba(247,118,142,0.35);color:var(--pink);background:rgba(247,118,142,0.08);}
+  .chip.medications{border-color:rgba(187,154,247,0.35);color:var(--purple);background:rgba(187,154,247,0.08);}
+  .chip.allergies{border-color:rgba(255,158,100,0.35);color:var(--orange);background:rgba(255,158,100,0.08);}
+  .chip.vitals{border-color:rgba(125,207,255,0.35);color:var(--cyan);background:rgba(125,207,255,0.08);}
+  .chip.chief-complaint{border-color:rgba(158,206,106,0.35);color:var(--green);background:rgba(158,206,106,0.08);}
+  .chip-empty{font-size:10px;color:var(--subtle);font-style:italic;}
+
+  /* SOAPIE sections */
+  .soapie-badge{display:inline-flex;gap:4px;margin-bottom:16px;}
+  .badge-letter{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
+  .bl-s{background:rgba(247,118,142,0.18);color:var(--pink);}
+  .bl-o{background:rgba(122,162,247,0.18);color:var(--blue);}
+  .bl-a{background:rgba(158,206,106,0.18);color:var(--green);}
+  .bl-p{background:rgba(187,154,247,0.18);color:var(--purple);}
+  .bl-i{background:rgba(255,158,100,0.18);color:var(--orange);}
+  .bl-e{background:rgba(115,218,202,0.18);color:var(--teal);}
+
+  .soap-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px;}
+  @media(max-width:640px){.soap-grid{grid-template-columns:1fr;}}
+
+  .soap-section{
+    background:var(--bg3);border:1px solid var(--border);border-radius:18px;
+    overflow:hidden;transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;
+  }
+  .soap-section:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 10px 30px rgba(122,162,247,0.12);}
+  .soap-header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);}
+  .soap-letter{font-size:16px;font-weight:700;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .soap-title{font-size:13px;font-weight:700;}
+  .soap-sub{font-size:11px;color:var(--subtle);font-weight:500;}
+  .soap-body{padding:16px;}
+  .s-letter{background:rgba(247,118,142,0.15);color:var(--pink);}
+  .o-letter{background:rgba(122,162,247,0.15);color:var(--blue);}
+  .a-letter{background:rgba(158,206,106,0.15);color:var(--green);}
+  .p-letter{background:rgba(187,154,247,0.15);color:var(--purple);}
+  .i-letter{background:rgba(255,158,100,0.15);color:var(--orange);}
+  .e-letter{background:rgba(115,218,202,0.15);color:var(--teal);}
+
+  .action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+  .btn{
+    padding:10px 22px;border-radius:999px;border:none;
+    font-family:'Inter',sans-serif;font-size:12.5px;font-weight:700;
+    cursor:pointer;transition:all 0.15s;
+  }
+  .btn:disabled{opacity:0.45;cursor:not-allowed;transform:none !important;}
+  .btn-primary{background:linear-gradient(135deg,var(--blue),var(--purple));color:var(--bg2);}
+  .btn-primary:hover:not(:disabled){opacity:0.88;transform:translateY(-1px);}
+  .btn-rec{background:linear-gradient(135deg,var(--pink),var(--orange));color:var(--bg2);}
+  .btn-rec:hover:not(:disabled){opacity:0.88;transform:translateY(-1px);}
+  .btn-pause{background:var(--bg3);color:var(--yellow);border:1px solid rgba(224,175,104,0.4);}
+  .btn-pause:hover:not(:disabled){background:rgba(224,175,104,0.12);}
+  .btn-stop{background:rgba(247,118,142,0.1);color:var(--pink);border:1px solid rgba(247,118,142,0.3);}
+  .btn-stop:hover:not(:disabled){background:rgba(247,118,142,0.2);}
+  .btn-ai{background:linear-gradient(135deg,var(--teal),var(--green));color:var(--bg2);}
+  .btn-ai:hover:not(:disabled){opacity:0.88;transform:translateY(-1px);}
+  .btn-secondary{background:var(--bg3);color:var(--white);border:1px solid var(--border);}
+  .btn-secondary:hover:not(:disabled){color:var(--text);border-color:var(--blue);}
+  .btn-danger{background:rgba(247,118,142,0.1);color:var(--pink);border:1px solid rgba(247,118,142,0.3);}
+  .btn-danger:hover:not(:disabled){background:rgba(247,118,142,0.2);}
+
+  .autosave-hint{
+    font-size:10.5px;color:var(--subtle);margin-top:10px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .autosave-hint .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+
+  .status-msg{margin-top:12px;font-size:11.5px;font-weight:500;padding:11px 16px;border-radius:12px;display:none;}
+  .status-msg.show{display:block;animation:fadeSlide 0.3s ease both;}
+  .status-msg.info{background:rgba(122,162,247,0.08);border:1px solid rgba(122,162,247,0.2);color:var(--blue);}
+  .status-msg.success{background:rgba(158,206,106,0.08);border:1px solid rgba(158,206,106,0.2);color:var(--green);}
+  .status-msg.error{background:rgba(247,118,142,0.08);border:1px solid rgba(247,118,142,0.2);color:var(--pink);}
+  .status-msg.loading{background:rgba(115,218,202,0.08);border:1px solid rgba(115,218,202,0.2);color:var(--teal);}
+
+  /* webhook config panel */
+  .config-panel{display:none;}
+  .config-panel.show{display:block;animation:fadeSlide 0.3s ease both;}
+  .config-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:16px;}
+  .config-field{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:16px;}
+  .config-field label{margin-bottom:8px;display:block;}
+  .config-field input,.config-field textarea{width:100%;}
+  .config-field .hint{font-size:10.5px;color:var(--subtle);margin-top:6px;line-height:1.5;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .toggle{
+    width:38px;height:21px;border-radius:999px;background:var(--border);
+    position:relative;flex-shrink:0;cursor:pointer;transition:background 0.2s;
+  }
+  .toggle::after{
+    content:'';position:absolute;top:2px;left:2px;
+    width:17px;height:17px;border-radius:50%;background:var(--white);
+    transition:left 0.2s;
+  }
+  .toggle.on{background:var(--purple);}
+  .toggle.on::after{left:19px;background:var(--bg2);}
+
+  .disclaimer{
+    background:rgba(247,118,142,0.06);border:1px solid rgba(247,118,142,0.2);
+    border-radius:14px;padding:14px 18px;font-size:11.5px;color:var(--subtle);
+    margin-top:20px;line-height:1.7;
+  }
+  .disclaimer strong{color:var(--pink);}
+
+  @media(max-width:640px){
+    .rec-bar{flex-direction:column;align-items:stretch;}
+    .rec-controls{justify-content:center;}
+    .extract-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- MAIN PANEL -->
+  <div class="panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-header-title"><span>🎙️</span> AI Clinical Scribe</div>
+        <div class="panel-header-sub">Live speech transcription with SOAPIE note generation</div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-link" id="config-toggle" type="button">⚙️ Webhook config</button>
+        <a class="back-link" href="index.html">← Back to portfolio</a>
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <span class="ai-badge">✦ Browser speech recognition · Local autosave</span>
+
+      <!-- PATIENT INFO -->
+      <div class="group-label">Patient Information</div>
+      <div class="top-row">
+        <div class="field"><label>patient initials</label><input id="pt-init" placeholder="J.D." /></div>
+        <div class="field"><label>MRN (optional)</label><input id="pt-mrn" placeholder="000000" /></div>
+        <div class="field"><label>age</label><input id="pt-age" type="number" placeholder="65" /></div>
+        <div class="field"><label>sex</label><select id="pt-sex"><option value="">--</option><option>M</option><option>F</option><option>NB</option></select></div>
+        <div class="field"><label>date</label><input id="pt-date" type="date" /></div>
+        <div class="field"><label>room / unit</label><input id="pt-room" placeholder="4B-201" /></div>
+        <div class="field"><label>attending</label><input id="pt-md" placeholder="Dr. Smith" /></div>
+        <div class="field"><label>nurse</label><input id="pt-rn" placeholder="Your Name, SN" /></div>
+      </div>
+
+      <!-- RECORDING -->
+      <div class="group-label">Live Transcription</div>
+      <div class="rec-bar">
+        <div class="rec-status">
+          <div class="rec-dot" id="rec-dot"></div>
+          <div>
+            <div class="rec-label" id="rec-label">Ready to record</div>
+            <div class="rec-timer mono" id="rec-timer">00:00:00</div>
+          </div>
+        </div>
+        <div class="rec-controls">
+          <button class="btn btn-rec" id="btn-start" type="button">▶ Start</button>
+          <button class="btn btn-pause" id="btn-pause" type="button" disabled>⏸ Pause</button>
+          <button class="btn btn-rec" id="btn-resume" type="button" disabled>▶ Resume</button>
+          <button class="btn btn-stop" id="btn-stop" type="button" disabled>⏹ Stop</button>
+        </div>
+      </div>
+
+      <div class="transcript-box mono" id="transcript" contenteditable="true" spellcheck="true"></div>
+
+      <div class="action-row" style="margin-bottom:22px;">
+        <button class="btn btn-secondary" id="btn-copy-transcript" type="button">📋 Copy transcript</button>
+        <button class="btn btn-secondary" id="btn-export-md" type="button">📄 Export Markdown</button>
+        <button class="btn btn-secondary" id="btn-export-txt" type="button">📝 Export Text</button>
+        <button class="btn btn-secondary" id="btn-populate-soapie" type="button">↻ Populate SOAPIE from transcript</button>
+      </div>
+
+      <!-- CLINICAL EXTRACTION -->
+      <div class="group-label">Clinical Extraction</div>
+      <div class="extract-grid">
+        <div class="extract-card">
+          <div class="extract-title"><span class="dot dot-cc"></span> Chief Complaint</div>
+          <div class="chip-group" id="chips-cc"><span class="chip-empty">Listening…</span></div>
+        </div>
+        <div class="extract-card">
+          <div class="extract-title"><span class="dot dot-symptoms"></span> Symptoms</div>
+          <div class="chip-group" id="chips-symptoms"><span class="chip-empty">None detected</span></div>
+        </div>
+        <div class="extract-card">
+          <div class="extract-title"><span class="dot dot-meds"></span> Medications</div>
+          <div class="chip-group" id="chips-meds"><span class="chip-empty">None detected</span></div>
+        </div>
+        <div class="extract-card">
+          <div class="extract-title"><span class="dot dot-allergies"></span> Allergies</div>
+          <div class="chip-group" id="chips-allergies"><span class="chip-empty">None detected</span></div>
+        </div>
+        <div class="extract-card">
+          <div class="extract-title"><span class="dot dot-vitals"></span> Vitals</div>
+          <div class="chip-group" id="chips-vitals"><span class="chip-empty">None detected</span></div>
+        </div>
+      </div>
+
+      <!-- SOAPIE -->
+      <div class="group-label">SOAPIE Note</div>
+      <div class="soapie-badge">
+        <div class="badge-letter bl-s">S</div>
+        <div class="badge-letter bl-o">O</div>
+        <div class="badge-letter bl-a">A</div>
+        <div class="badge-letter bl-p">P</div>
+        <div class="badge-letter bl-i">I</div>
+        <div class="badge-letter bl-e">E</div>
+      </div>
+
+      <div class="soap-grid">
+        <div class="soap-section">
+          <div class="soap-header">
+            <div class="soap-letter s-letter">S</div>
+            <div><div class="soap-title" style="color:var(--pink)">Subjective</div><div class="soap-sub">patient's own words &amp; complaints</div></div>
+          </div>
+          <div class="soap-body">
+            <div class="field"><label>subjective notes</label><textarea id="soap-s" rows="5" placeholder="Chief complaint, history, patient statements…"></textarea></div>
+          </div>
+        </div>
+
+        <div class="soap-section">
+          <div class="soap-header">
+            <div class="soap-letter o-letter">O</div>
+            <div><div class="soap-title" style="color:var(--blue)">Objective</div><div class="soap-sub">measurable clinical findings</div></div>
+          </div>
+          <div class="soap-body">
+            <div class="field"><label>objective findings</label><textarea id="soap-o" rows="5" placeholder="Vitals, exam findings, lab values…"></textarea></div>
+          </div>
+        </div>
+
+        <div class="soap-section">
+          <div class="soap-header">
+            <div class="soap-letter a-letter">A</div>
+            <div><div class="soap-title" style="color:var(--green)">Assessment</div><div class="soap-sub">nursing diagnosis &amp; clinical impression</div></div>
+          </div>
+          <div class="soap-body">
+            <div class="field"><label>assessment</label><textarea id="soap-a" rows="5" placeholder="Nursing diagnoses, clinical impression…"></textarea></div>
+          </div>
+        </div>
+
+        <div class="soap-section">
+          <div class="soap-header">
+            <div class="soap-letter p-letter">P</div>
+            <div><div class="soap-title" style="color:var(--purple)">Plan</div><div class="soap-sub">intended interventions &amp; goals</div></div>
+          </div>
+          <div class="soap-body">
+            <div class="field"><label>plan</label><textarea id="soap-p" rows="5" placeholder="Interventions, orders, education plan…"></textarea></div>
+          </div>
+        </div>
+
+        <div class="soap-section">
+          <div class="soap-header">
+            <div class="soap-letter i-letter">I</div>
+            <div><div class="soap-title" style="color:var(--orange)">Implementation</div><div class="soap-sub">nursing actions carried out</div></div>
+          </div>
+          <div class="soap-body">
+            <div class="field"><label>implementation</label><textarea id="soap-i" rows="5" placeholder="Actions performed, times, procedures…"></textarea></div>
+          </div>
+        </div>
+
+        <div class="soap-section">
+          <div class="soap-header">
+            <div class="soap-letter e-letter">E</div>
+            <div><div class="soap-title" style="color:var(--teal)">Evaluation</div><div class="soap-sub">patient response to interventions</div></div>
+          </div>
+          <div class="soap-body">
+            <div class="field"><label>evaluation</label><textarea id="soap-e" rows="5" placeholder="Patient response, goal progress, follow-up…"></textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" id="btn-download-soapie" type="button">⬇ Download SOAPIE</button>
+        <button class="btn btn-ai" id="btn-send-webhook" type="button">✦ Send to Make.com</button>
+        <button class="btn btn-danger" id="btn-clear" type="button">🗑 Clear session</button>
+      </div>
+
+      <div class="status-msg" id="status-msg"></div>
+      <div class="autosave-hint"><span class="dot"></span> <span id="autosave-text">Autosave enabled — changes saved locally</span></div>
+
+      <div class="disclaimer">
+        <strong>Clinical disclaimer:</strong> AI-generated notes and speech transcriptions require human review before use in any patient record. This tool is for educational and practice purposes only. Do not use for actual patient documentation without review and approval by a licensed supervising clinician. Always follow your institution's documentation policies and HIPAA requirements.
+      </div>
+    </div>
+  </div>
+
+  <!-- WEBHOOK CONFIG PANEL -->
+  <div class="panel config-panel" id="config-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-header-title"><span>⚙️</span> Make.com Webhook Configuration</div>
+        <div class="panel-header-sub">Configure automation endpoint for AI-enhanced note delivery</div>
+      </div>
+      <button class="icon-link" id="config-close" type="button">✕ Close</button>
+    </div>
+    <div class="panel-body">
+      <div class="config-grid">
+        <div class="config-field">
+          <div class="toggle-row">
+            <label>Enable webhook integration</label>
+            <div class="toggle" id="webhook-enabled" role="switch" aria-checked="false" tabindex="0"></div>
+          </div>
+          <p class="hint">When enabled, the "Send to Make.com" button will POST session data to your webhook URL.</p>
+        </div>
+        <div class="config-field">
+          <label>Webhook URL</label>
+          <input id="webhook-url" type="url" placeholder="https://hook.us2.make.com/your-webhook-id" />
+          <p class="hint">Paste your Make.com custom webhook URL. Data is sent as JSON with patient info, transcript, extractions, and SOAPIE sections.</p>
+        </div>
+        <div class="config-field">
+          <label>Nurse email (optional — for AI note delivery)</label>
+          <input id="webhook-email" type="email" placeholder="nurse@email.com" />
+          <p class="hint">Included in webhook payload when sending to Make.com for email delivery via your scenario.</p>
+        </div>
+        <div class="config-field">
+          <label>Scenario name (reference only)</label>
+          <input id="webhook-scenario" type="text" placeholder="e.g. AI Scribe → Gemini → Gmail" />
+          <p class="hint">Label for your own reference. Not sent to the webhook.</p>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-primary" id="btn-save-config" type="button">Save configuration</button>
+        <button class="btn btn-secondary" id="btn-test-webhook" type="button">Test webhook</button>
+        <button class="btn btn-danger" id="btn-reset-config" type="button">Reset to defaults</button>
+      </div>
+      <div class="status-msg" id="config-status"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'ai-scribe-session';
+  const CONFIG_KEY = 'ai-scribe-webhook-config';
+  const DEFAULT_WEBHOOK = 'https://hook.us2.make.com/bb4698gw6cv94h8iejghfwbzui8173ls';
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  let recognition = null;
+  let recState = 'idle'; // idle | recording | paused | stopped
+  let timerInterval = null;
+  let timerSeconds = 0;
+  let interimSpan = null;
+
+  const extractions = {
+    chiefComplaint: new Set(),
+    symptoms: new Set(),
+    medications: new Set(),
+    allergies: new Set(),
+    vitals: new Set()
+  };
+
+  const symptomPatterns = [
+    /\b(chest pain|shortness of breath|sob|nausea|vomiting|headache|dizziness|fever|chills|abdominal pain|abd pain|weakness|fatigue|pain|numbness|tingling|swelling|edema|cough|diarrhea|constipation|confusion|anxiety|depression|insomnia|rash|itching|bleeding|palpitations|syncope|dyspnea)\b/gi
+  ];
+
+  const medPatterns = [
+    /\b(?:taking|on|prescribed|medication[s]?|med[s]?)\s+(?:is\s+)?([a-z]+(?:\s+[a-z]+)?(?:\s+\d+\s*mg)?)/gi,
+    /\b(metformin|lisinopril|amlodipine|atorvastatin|omeprazole|levothyroxine|metoprolol|losartan|gabapentin|hydrochlorothiazide|sertraline|furosemide|pantoprazole|escitalopram|montelukast|rosuvastatin|bupropion|tramadol|prednisone|insulin|warfarin|heparin|morphine|fentanyl|midazolam|propofol|norepinephrine|epinephrine|dopamine|vancomycin|ceftriaxone|azithromycin|acetaminophen|ibuprofen|aspirin|tylenol|advil|motrin|benadryl|zofran|lasix|nitroglycerin|nitro)\b/gi
+  ];
+
+  const allergyPatterns = [
+    /\b(?:allerg(?:y|ies|ic)\s+(?:to\s+)?)([a-z]+(?:\s+[a-z]+)?)/gi,
+    /\b(?:allerg(?:y|ies|ic)\s+(?:to\s+)?)(penicillin|sulfa|latex|aspirin|codeine|morphine|shellfish|peanuts|eggs|iodine|contrast|nsaids?)\b/gi,
+    /\b(nkda|no known (?:drug )?allergies)\b/gi
+  ];
+
+  const vitalPatterns = [
+    /\bblood pressure\s*(?:is\s*)?(\d{2,3}\s*\/\s*\d{2,3})\b/gi,
+    /\bbp\s*(?:is\s*)?(\d{2,3}\s*\/\s*\d{2,3})\b/gi,
+    /\bheart rate\s*(?:is\s*)?(\d{2,3})\b/gi,
+    /\bhr\s*(?:is\s*)?(\d{2,3})\b/gi,
+    /\b(?:respiratory rate|rr)\s*(?:is\s*)?(\d{1,2})\b/gi,
+    /\btemp(?:erature)?\s*(?:is\s*)?(\d{2,3}(?:\.\d)?)\s*(?:degrees?|°)?\s*(?:f|c|fahrenheit|celsius)?\b/gi,
+    /\b(?:spo2|o2 sat(?:uration)?|oxygen saturation)\s*(?:is\s*)?(\d{2,3})\s*%?\b/gi,
+    /\bpain\s*(?:score|level|rating)?\s*(?:is\s*)?(\d{1,2})\s*(?:out of\s*10|\/\s*10)?\b/gi
+  ];
+
+  const ccPatterns = [
+    /\b(?:chief complaint|cc|presenting complaint|reason for (?:visit|admission))\s*(?:is|:)?\s*([^.!?]{5,80})/gi,
+    /\b(?:complains? of|complaining of|c/o)\s+([^.!?]{5,80})/gi,
+    /\b(?:here for|came in (?:for|with))\s+([^.!?]{5,60})/gi
+  ];
+
+  function g(id) { return document.getElementById(id); }
+
+  function showStatus(elId, type, msg) {
+    const el = g(elId);
+    el.className = `status-msg show ${type}`;
+    el.textContent = msg;
+  }
+
+  function hideStatus(elId) {
+    const el = g(elId);
+    el.className = 'status-msg';
+    el.textContent = '';
+  }
+
+  function formatTimer(secs) {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+  }
+
+  function startTimer() {
+    stopTimer(false);
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      g('rec-timer').textContent = formatTimer(timerSeconds);
+      scheduleAutosave();
+    }, 1000);
+  }
+
+  function stopTimer(reset) {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    if (reset) {
+      timerSeconds = 0;
+      g('rec-timer').textContent = '00:00:00';
+    }
+  }
+
+  function updateRecUI() {
+    const dot = g('rec-dot');
+    const label = g('rec-label');
+    dot.className = 'rec-dot';
+    if (recState === 'recording') {
+      dot.classList.add('active');
+      label.textContent = 'Recording…';
+    } else if (recState === 'paused') {
+      dot.classList.add('paused');
+      label.textContent = 'Paused';
+    } else if (recState === 'stopped') {
+      label.textContent = 'Recording stopped';
+    } else {
+      label.textContent = 'Ready to record';
+    }
+    g('btn-start').disabled = recState === 'recording' || recState === 'paused';
+    g('btn-pause').disabled = recState !== 'recording';
+    g('btn-resume').disabled = recState !== 'paused';
+    g('btn-stop').disabled = recState === 'idle' || recState === 'stopped';
+  }
+
+  function getTranscriptText() {
+    const box = g('transcript');
+    return box.innerText.trim();
+  }
+
+  function setTranscriptText(text) {
+    g('transcript').textContent = text;
+  }
+
+  function appendFinalTranscript(text) {
+    const box = g('transcript');
+    if (interimSpan && interimSpan.parentNode) {
+      interimSpan.remove();
+      interimSpan = null;
+    }
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const current = box.innerText.trim();
+    box.textContent = current ? current + ' ' + trimmed : trimmed;
+    extractClinicalData(getTranscriptText());
+    scheduleAutosave();
+  }
+
+  function showInterim(text) {
+    const box = g('transcript');
+    if (!interimSpan) {
+      interimSpan = document.createElement('span');
+      interimSpan.className = 'transcript-interim';
+      box.appendChild(document.createTextNode(' '));
+      box.appendChild(interimSpan);
+    }
+    interimSpan.textContent = text;
+  }
+
+  function initRecognition() {
+    if (!SpeechRecognition) {
+      showStatus('status-msg', 'error', '✗ Speech recognition is not supported in this browser. Try Chrome or Edge.');
+      g('btn-start').disabled = true;
+      return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          appendFinalTranscript(result[0].transcript);
+        } else {
+          interim += result[0].transcript;
+        }
+      }
+      if (interim) showInterim(interim);
+    };
+
+    recognition.onerror = (event) => {
+      if (event.error === 'no-speech') return;
+      if (event.error === 'aborted') return;
+      showStatus('status-msg', 'error', `✗ Speech recognition error: ${event.error}`);
+      if (recState === 'recording') {
+        recState = 'paused';
+        stopTimer(false);
+        updateRecUI();
+      }
+    };
+
+    recognition.onend = () => {
+      if (recState === 'recording') {
+        try { recognition.start(); } catch (_) { /* restart */ }
+      }
+    };
+  }
+
+  function startRecording() {
+    if (!SpeechRecognition) return;
+    try {
+      recognition.start();
+      recState = 'recording';
+      startTimer();
+      updateRecUI();
+      hideStatus('status-msg');
+      showStatus('status-msg', 'info', '● Microphone active — speak clearly. Transcript updates in real time.');
+    } catch (err) {
+      showStatus('status-msg', 'error', '✗ Could not start microphone. Check browser permissions.');
+    }
+  }
+
+  function pauseRecording() {
+    if (!recognition || recState !== 'recording') return;
+    recognition.stop();
+    recState = 'paused';
+    stopTimer(false);
+    if (interimSpan) {
+      appendFinalTranscript(interimSpan.textContent);
+    }
+    updateRecUI();
+    showStatus('status-msg', 'info', '⏸ Recording paused.');
+  }
+
+  function resumeRecording() {
+    if (!recognition || recState !== 'paused') return;
+    try {
+      recognition.start();
+      recState = 'recording';
+      startTimer();
+      updateRecUI();
+      showStatus('status-msg', 'info', '● Recording resumed.');
+    } catch (err) {
+      showStatus('status-msg', 'error', '✗ Could not resume recording.');
+    }
+  }
+
+  function stopRecording() {
+    if (!recognition) return;
+    recognition.stop();
+    if (interimSpan) {
+      appendFinalTranscript(interimSpan.textContent);
+    }
+    recState = 'stopped';
+    stopTimer(false);
+    updateRecUI();
+    showStatus('status-msg', 'success', '⏹ Recording stopped. Review and edit transcript below.');
+  }
+
+  function matchPatterns(text, patterns, formatter) {
+    const found = new Set();
+    patterns.forEach(pattern => {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        const val = formatter ? formatter(match) : (match[1] || match[0]);
+        if (val) found.add(val.trim().toLowerCase().replace(/\s+/g, ' '));
+      }
+    });
+    return found;
+  }
+
+  function extractClinicalData(text) {
+    if (!text) return;
+
+    matchPatterns(text, ccPatterns, m => m[1]).forEach(v => extractions.chiefComplaint.add(v));
+    matchPatterns(text, symptomPatterns).forEach(v => extractions.symptoms.add(v));
+    matchPatterns(text, medPatterns, m => m[1] || m[0]).forEach(v => extractions.medications.add(v));
+    matchPatterns(text, allergyPatterns, m => m[1] || m[0]).forEach(v => extractions.allergies.add(v));
+
+    vitalPatterns.forEach(pattern => {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        const label = match[0].split(/\d/)[0].trim().toLowerCase();
+        extractions.vitals.add(`${label}: ${match[1]}`);
+      }
+    });
+
+    renderChips('chips-cc', extractions.chiefComplaint, 'chief-complaint');
+    renderChips('chips-symptoms', extractions.symptoms, 'symptoms');
+    renderChips('chips-meds', extractions.medications, 'medications');
+    renderChips('chips-allergies', extractions.allergies, 'allergies');
+    renderChips('chips-vitals', extractions.vitals, 'vitals');
+  }
+
+  function renderChips(containerId, set, cls) {
+    const container = g(containerId);
+    container.innerHTML = '';
+    if (set.size === 0) {
+      container.innerHTML = '<span class="chip-empty">None detected</span>';
+      return;
+    }
+    set.forEach(val => {
+      const chip = document.createElement('span');
+      chip.className = `chip ${cls}`;
+      chip.textContent = val;
+      container.appendChild(chip);
+    });
+  }
+
+  function populateSoapieFromTranscript() {
+    const text = getTranscriptText();
+    if (!text) {
+      showStatus('status-msg', 'error', '✗ No transcript to populate from.');
+      return;
+    }
+
+    extractClinicalData(text);
+
+    const cc = [...extractions.chiefComplaint].join(', ');
+    const symptoms = [...extractions.symptoms].join(', ');
+    const meds = [...extractions.medications].join(', ');
+    const allergies = [...extractions.allergies].join(', ');
+    const vitals = [...extractions.vitals].join('; ');
+
+    let subjective = '';
+    if (cc) subjective += `Chief Complaint: ${cc}\n`;
+    if (symptoms) subjective += `Symptoms: ${symptoms}\n`;
+    if (meds) subjective += `Medications mentioned: ${meds}\n`;
+    if (allergies) subjective += `Allergies: ${allergies}\n`;
+    subjective += `\nTranscript excerpt:\n${text}`;
+
+    if (!g('soap-s').value.trim()) g('soap-s').value = subjective.trim();
+    if (!g('soap-o').value.trim() && vitals) g('soap-o').value = `Vitals noted: ${vitals}`;
+
+    scheduleAutosave();
+    showStatus('status-msg', 'success', '✓ SOAPIE sections populated from transcript. Review and edit before saving.');
+  }
+
+  function collectSessionData() {
+    return {
+      patient: {
+        initials: g('pt-init').value.trim(),
+        mrn: g('pt-mrn').value.trim(),
+        age: g('pt-age').value.trim(),
+        sex: g('pt-sex').value,
+        date: g('pt-date').value,
+        room: g('pt-room').value.trim(),
+        attending: g('pt-md').value.trim(),
+        nurse: g('pt-rn').value.trim()
+      },
+      transcript: getTranscriptText(),
+      extractions: {
+        chiefComplaint: [...extractions.chiefComplaint],
+        symptoms: [...extractions.symptoms],
+        medications: [...extractions.medications],
+        allergies: [...extractions.allergies],
+        vitals: [...extractions.vitals]
+      },
+      soapie: {
+        subjective: g('soap-s').value.trim(),
+        objective: g('soap-o').value.trim(),
+        assessment: g('soap-a').value.trim(),
+        plan: g('soap-p').value.trim(),
+        implementation: g('soap-i').value.trim(),
+        evaluation: g('soap-e').value.trim()
+      },
+      recording: {
+        durationSeconds: timerSeconds,
+        state: recState
+      },
+      exportedAt: new Date().toISOString()
+    };
+  }
+
+  function buildSoapieDocument(format) {
+    const d = collectSessionData();
+    const p = d.patient;
+    const s = d.soapie;
+
+    if (format === 'markdown') {
+      return `# Nursing SOAPIE Note
+
+**Patient:** ${p.initials || '[Patient]'}${p.age ? ` | Age: ${p.age}` : ''}${p.sex ? ` | Sex: ${p.sex}` : ''}${p.mrn ? ` | MRN: ${p.mrn}` : ''}
+**Date:** ${p.date || new Date().toLocaleDateString()}${p.room ? ` | Room: ${p.room}` : ''}
+**Attending:** ${p.attending || '--'} | **Documented by:** ${p.nurse || '--'}
+
+---
+
+## Transcript
+${d.transcript || '_No transcript recorded_'}
+
+---
+
+## [S] Subjective
+${s.subjective || '_Not documented_'}
+
+## [O] Objective
+${s.objective || '_Not documented_'}
+
+## [A] Assessment
+${s.assessment || '_Not documented_'}
+
+## [P] Plan
+${s.plan || '_Not documented_'}
+
+## [I] Implementation
+${s.implementation || '_Not documented_'}
+
+## [E] Evaluation
+${s.evaluation || '_Not documented_'}
+
+---
+
+> **EDUCATIONAL USE ONLY** — AI-generated content requires human review before clinical use.
+> Documented by: ${p.nurse || '[Nurse Name, SN]'} | ${p.date || new Date().toLocaleDateString()}`;
+    }
+
+    return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NURSING SOAPIE NOTE — AI CLINICAL SCRIBE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Patient: ${p.initials || '[Patient]'}${p.age ? ` | Age: ${p.age}` : ''}${p.sex ? ` | Sex: ${p.sex}` : ''}${p.mrn ? ` | MRN: ${p.mrn}` : ''}
+Date: ${p.date || new Date().toLocaleDateString()}${p.room ? ` | Room: ${p.room}` : ''}
+Attending: ${p.attending || '--'} | Documented by: ${p.nurse || '--'}
+Recording duration: ${formatTimer(timerSeconds)}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TRANSCRIPT
+──────────
+${d.transcript || 'No transcript recorded'}
+
+[S] SUBJECTIVE
+──────────────
+${s.subjective || 'Not documented'}
+
+[O] OBJECTIVE
+──────────────
+${s.objective || 'Not documented'}
+
+[A] ASSESSMENT
+──────────────
+${s.assessment || 'Not documented'}
+
+[P] PLAN
+──────────────
+${s.plan || 'Not documented'}
+
+[I] IMPLEMENTATION
+──────────────────
+${s.implementation || 'Not documented'}
+
+[E] EVALUATION
+──────────────
+${s.evaluation || 'Not documented'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Documented by: ${p.nurse || '[Nurse Name, SN]'} | ${p.date || new Date().toLocaleDateString()}
+[EDUCATIONAL USE ONLY — AI-GENERATED CONTENT REQUIRES HUMAN REVIEW]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+  }
+
+  function downloadFile(content, filename, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function copyTranscript() {
+    const text = getTranscriptText();
+    if (!text) {
+      showStatus('status-msg', 'error', '✗ No transcript to copy.');
+      return;
+    }
+    navigator.clipboard.writeText(text).then(() => {
+      showStatus('status-msg', 'success', '✓ Transcript copied to clipboard.');
+    }).catch(() => {
+      showStatus('status-msg', 'error', '✗ Could not copy to clipboard.');
+    });
+  }
+
+  function exportMarkdown() {
+    const content = buildSoapieDocument('markdown');
+    const initials = g('pt-init').value.trim() || 'patient';
+    downloadFile(content, `soapie-${initials}-${Date.now()}.md`, 'text/markdown');
+    showStatus('status-msg', 'success', '✓ Markdown file downloaded.');
+  }
+
+  function exportText() {
+    const content = buildSoapieDocument('text');
+    const initials = g('pt-init').value.trim() || 'patient';
+    downloadFile(content, `soapie-${initials}-${Date.now()}.txt`, 'text/plain');
+    showStatus('status-msg', 'success', '✓ Text file downloaded.');
+  }
+
+  function downloadSoapie() {
+    exportText();
+  }
+
+  let autosaveTimer = null;
+  function scheduleAutosave() {
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(saveSession, 800);
+  }
+
+  function saveSession() {
+    const data = collectSessionData();
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      g('autosave-text').textContent = `Saved locally at ${new Date().toLocaleTimeString()}`;
+    } catch (_) {
+      g('autosave-text').textContent = 'Autosave unavailable (storage full or disabled)';
+    }
+  }
+
+  function loadSession() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+
+      if (data.patient) {
+        Object.entries(data.patient).forEach(([key, val]) => {
+          const map = { initials: 'pt-init', mrn: 'pt-mrn', age: 'pt-age', sex: 'pt-sex', date: 'pt-date', room: 'pt-room', attending: 'pt-md', nurse: 'pt-rn' };
+          if (map[key] && val) g(map[key]).value = val;
+        });
+      }
+
+      if (data.transcript) setTranscriptText(data.transcript);
+      if (data.soapie) {
+        g('soap-s').value = data.soapie.subjective || '';
+        g('soap-o').value = data.soapie.objective || '';
+        g('soap-a').value = data.soapie.assessment || '';
+        g('soap-p').value = data.soapie.plan || '';
+        g('soap-i').value = data.soapie.implementation || '';
+        g('soap-e').value = data.soapie.evaluation || '';
+      }
+
+      if (data.extractions) {
+        Object.entries(data.extractions).forEach(([key, arr]) => {
+          const map = { chiefComplaint: 'chiefComplaint', symptoms: 'symptoms', medications: 'medications', allergies: 'allergies', vitals: 'vitals' };
+          if (map[key] && Array.isArray(arr)) arr.forEach(v => extractions[map[key]].add(v));
+        });
+        renderChips('chips-cc', extractions.chiefComplaint, 'chief-complaint');
+        renderChips('chips-symptoms', extractions.symptoms, 'symptoms');
+        renderChips('chips-meds', extractions.medications, 'medications');
+        renderChips('chips-allergies', extractions.allergies, 'allergies');
+        renderChips('chips-vitals', extractions.vitals, 'vitals');
+      }
+
+      if (data.recording && data.recording.durationSeconds) {
+        timerSeconds = data.recording.durationSeconds;
+        g('rec-timer').textContent = formatTimer(timerSeconds);
+      }
+
+      g('autosave-text').textContent = 'Previous session restored from local storage';
+    } catch (_) { /* ignore corrupt data */ }
+  }
+
+  function clearSession() {
+    if (!confirm('Clear all session data including transcript and SOAPIE notes?')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    document.querySelectorAll('input, textarea').forEach(el => {
+      if (el.id !== 'webhook-url' && el.id !== 'webhook-email' && el.id !== 'webhook-scenario') el.value = '';
+    });
+    g('pt-sex').selectedIndex = 0;
+    g('pt-date').value = new Date().toISOString().split('T')[0];
+    setTranscriptText('');
+    Object.keys(extractions).forEach(k => extractions[k].clear());
+    renderChips('chips-cc', extractions.chiefComplaint, 'chief-complaint');
+    renderChips('chips-symptoms', extractions.symptoms, 'symptoms');
+    renderChips('chips-meds', extractions.medications, 'medications');
+    renderChips('chips-allergies', extractions.allergies, 'allergies');
+    renderChips('chips-vitals', extractions.vitals, 'vitals');
+    recState = 'idle';
+    stopTimer(true);
+    updateRecUI();
+    hideStatus('status-msg');
+    showStatus('status-msg', 'success', '✓ Session cleared.');
+  }
+
+  function getConfig() {
+    try {
+      const raw = localStorage.getItem(CONFIG_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (_) { /* fall through */ }
+    return { enabled: false, url: DEFAULT_WEBHOOK, email: '', scenario: '' };
+  }
+
+  function saveConfig() {
+    const config = {
+      enabled: g('webhook-enabled').classList.contains('on'),
+      url: g('webhook-url').value.trim() || DEFAULT_WEBHOOK,
+      email: g('webhook-email').value.trim(),
+      scenario: g('webhook-scenario').value.trim()
+    };
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+    showStatus('config-status', 'success', '✓ Webhook configuration saved.');
+  }
+
+  function loadConfig() {
+    const config = getConfig();
+    g('webhook-url').value = config.url || DEFAULT_WEBHOOK;
+    g('webhook-email').value = config.email || '';
+    g('webhook-scenario').value = config.scenario || '';
+    if (config.enabled) g('webhook-enabled').classList.add('on');
+  }
+
+  function resetConfig() {
+    localStorage.removeItem(CONFIG_KEY);
+    g('webhook-enabled').classList.remove('on');
+    g('webhook-url').value = DEFAULT_WEBHOOK;
+    g('webhook-email').value = '';
+    g('webhook-scenario').value = '';
+    showStatus('config-status', 'success', '✓ Configuration reset to defaults.');
+  }
+
+  async function sendWebhook(isTest) {
+    const config = getConfig();
+    if (!config.enabled && !isTest) {
+      showStatus('status-msg', 'error', '✗ Webhook is disabled. Open Webhook config to enable it.');
+      g('config-panel').classList.add('show');
+      return;
+    }
+
+    const url = g('webhook-url').value.trim() || config.url || DEFAULT_WEBHOOK;
+    if (!url) {
+      showStatus('status-msg', 'error', '✗ No webhook URL configured.');
+      return;
+    }
+
+    const payload = collectSessionData();
+    payload.email = g('webhook-email').value.trim() || config.email;
+    payload.test = isTest;
+
+    const statusEl = isTest ? 'config-status' : 'status-msg';
+    showStatus(statusEl, 'loading', '⟳ Sending to Make.com webhook…');
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        showStatus(statusEl, 'success', isTest ? '✓ Test webhook sent successfully!' : '✓ Session data sent to Make.com. Check your scenario for results.');
+      } else {
+        showStatus(statusEl, 'error', '✗ Webhook returned an error. Verify your Make.com scenario is active.');
+      }
+    } catch (_) {
+      showStatus(statusEl, 'error', '✗ Failed to reach webhook. Check URL and network connection.');
+    }
+  }
+
+  function toggleConfigPanel() {
+    g('config-panel').classList.toggle('show');
+  }
+
+  function toggleSwitch(el) {
+    el.classList.toggle('on');
+    el.setAttribute('aria-checked', el.classList.contains('on'));
+  }
+
+  // Event listeners
+  g('btn-start').addEventListener('click', startRecording);
+  g('btn-pause').addEventListener('click', pauseRecording);
+  g('btn-resume').addEventListener('click', resumeRecording);
+  g('btn-stop').addEventListener('click', stopRecording);
+  g('btn-copy-transcript').addEventListener('click', copyTranscript);
+  g('btn-export-md').addEventListener('click', exportMarkdown);
+  g('btn-export-txt').addEventListener('click', exportText);
+  g('btn-populate-soapie').addEventListener('click', populateSoapieFromTranscript);
+  g('btn-download-soapie').addEventListener('click', downloadSoapie);
+  g('btn-send-webhook').addEventListener('click', () => sendWebhook(false));
+  g('btn-clear').addEventListener('click', clearSession);
+  g('config-toggle').addEventListener('click', toggleConfigPanel);
+  g('config-close').addEventListener('click', toggleConfigPanel);
+  g('btn-save-config').addEventListener('click', saveConfig);
+  g('btn-test-webhook').addEventListener('click', () => sendWebhook(true));
+  g('btn-reset-config').addEventListener('click', resetConfig);
+  g('webhook-enabled').addEventListener('click', () => toggleSwitch(g('webhook-enabled')));
+  g('webhook-enabled').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSwitch(g('webhook-enabled')); }
+  });
+
+  document.querySelectorAll('#pt-init,#pt-mrn,#pt-age,#pt-sex,#pt-date,#pt-room,#pt-md,#pt-rn,#soap-s,#soap-o,#soap-a,#soap-p,#soap-i,#soap-e').forEach(el => {
+    el.addEventListener('input', scheduleAutosave);
+  });
+
+  g('transcript').addEventListener('input', () => {
+    extractClinicalData(getTranscriptText());
+    scheduleAutosave();
+  });
+
+  // Init
+  g('pt-date').value = new Date().toISOString().split('T')[0];
+  initRecognition();
+  loadConfig();
+  loadSession();
+  updateRecUI();
+})();
+</script>
+</body>
+</html>
